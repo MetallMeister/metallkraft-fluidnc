@@ -1,0 +1,10 @@
+node_modules/
+dist-standard/
+test-results/
+.DS_Store
+._*
+.env
+.env.*
+*.local.*
+backups/
+qa-standard/

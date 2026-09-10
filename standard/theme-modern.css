@@ -1,0 +1,402 @@
+/* Modern presentation layer. Native DOM, commands and layout tracks are retained. */
+:root {
+  --mk-page: #f1f3f6;
+  --mk-surface: #fff;
+  --mk-face: #fff;
+  --mk-ink: #202934;
+  --mk-muted: #5e6978;
+  --mk-line: #d8dee6;
+  --mk-blue: #1764d8;
+  --mk-raised: none;
+  --mk-sunken: none;
+}
+body, #dashboard { background: var(--mk-page); color: var(--mk-ink); }
+body { font-family: -apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif; -webkit-font-smoothing: antialiased; }
+a, a:visited, .text-primary { color: var(--mk-blue) !important; }
+button, .btn, .form-input, .form-select, .flatbtn label, .menu, .modal-container { border-radius: 5px !important; box-shadow: none !important; }
+.btn, .form-input, .form-select { border: 1px solid var(--mk-line); color: var(--mk-ink); background: var(--mk-surface); font-weight: 550; }
+.btn, .flatbtn label, #jogPanel .jog-buttons-container .btn, #dashboard .btn.btn-primary, #dashboard .btn.dropdown-toggle { border-color: var(--mk-line) !important; color: var(--mk-ink) !important; }
+.btn:hover { color: #134fa8; background: #edf4ff !important; border-color: #99b7e5; }
+.btn:active { background: #e2edfc; }
+.btn:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--mk-blue); outline-offset: 2px; }
+.btn-primary, #dashboard .btn.btn-primary, #dashboard .btn.active, .btn.active, .flatbtn input:checked + label { background: var(--mk-blue) !important; color: #fff !important; border-color: var(--mk-blue) !important; }
+.btn:disabled, .btn.disabled { opacity: .42; }
+.form-input { font-variant-numeric: tabular-nums; padding-left: 10px; }
+.form-input:focus, .form-select:focus { border-color: var(--mk-blue); box-shadow: 0 0 0 2px #1764d822 !important; }
+header.navbar { background: #fff; border-bottom: 1px solid var(--mk-line); padding-inline: 12px; box-shadow: none; }
+header.navbar .navbar-brand { padding-right: 22px; }
+header.navbar .navbar-brand::after, .metallkraft-wordmark { color: #16212d; font-size: 24px; font-weight: 750; }
+header.navbar .navbar-section > .btn, header.navbar .navbar-section > a:not(.navbar-brand) { border-color: transparent !important; background: transparent; }
+header.navbar .active { background: #eaf2ff !important; color: #155fc9 !important; border-color: transparent !important; }
+header.navbar .btn { padding-inline: 10px; }
+header.navbar .btn:hover { background: #f0f3f7; }
+#dashboard .panel-dashboard { border-top: 1px solid var(--mk-line); background: transparent; box-shadow: none !important; }
+#dashboard .panel-dashboard > .navbar, #jogPanel > .navbar, #SpindlePanel > .navbar {
+  background: #fff; border: 0; border-bottom: 1px solid var(--mk-line); color: var(--mk-ink); box-shadow: none;
+  padding: 0 6px;
+}
+#dashboard .panel-dashboard > .navbar .navbar-section { color: var(--mk-ink); background: transparent; box-shadow: none; }
+#dashboard .panel-dashboard > .navbar strong { font-weight: 700; font-size: 18px; }
+#dashboard .panel-dashboard > .navbar .navbar-section > svg { color: #557296; width: 19px; height: 19px; }
+#dashboard .panel-dashboard > .navbar .dropdown-toggle { background: transparent !important; border-color: transparent !important; }
+#dashboard .panel-dashboard > .navbar .dropdown-toggle:hover { background: #edf2f8 !important; }
+#dashboard .panel-body-dashboard { background: #fff; }
+#dashboard .panel-target-container { background: transparent; }
+#dashboard .text-info, #statusPanel legend label { color: var(--mk-muted) !important; }
+.panel-dashboard .extra-control-header { background: #f4f6f9; color: var(--mk-muted); font-weight: 550; }
+.panel-dashboard .extra-control-value { background: #fff; color: var(--mk-ink); box-shadow: none; font-weight: 700; }
+
+/* Keep the state concise and reserve solid color for the active action. */
+#statusPanel .big-text { background: #e9f4ed; color: #286743; box-shadow: none; border-radius: 4px; }
+#statusPanel .big-text.bg-error { background: #fce7e9 !important; color: #9f2636 !important; }
+#statusPanel .big-text.bg-warning { background: #fff1c6 !important; color: #694e00 !important; }
+#statusPanel .status-ctrls::before { color: var(--mk-muted); font-weight: 500; }
+#statusPanel .status-ctrls .extra-control-value { color: #4d596a; background: transparent; box-shadow: none; font-weight: 500; }
+#statusPanel .status-buttons-container .btn { border: 1px solid var(--mk-line) !important; border-radius: 6px !important; }
+#statusPanel .status-buttons-container .btn::before { font-weight: 650; }
+#statusPanel .status-buttons-container :is([data-tooltip="一時停止"],[data-tooltip="再開"]) { background: #eaf2ff !important; color: #175cbd !important; border-color: #bbd2f4 !important; }
+#statusPanel:has([data-machine-state="Run"]) .status-buttons-container [data-tooltip="一時停止"] { background: #3a844c !important; color: #fff !important; border-color: #3a844c !important; }
+#statusPanel:has([data-machine-state="Hold"]) .status-buttons-container [data-tooltip="再開"],
+#statusPanel:has([data-machine-state="Tool"]) .status-buttons-container [data-tooltip="再開"] { background: #f2ce5b !important; color: #251c00 !important; border-color: #f2ce5b !important; }
+#statusPanel .status-buttons-container [data-tooltip="リセット"] { background: #fff !important; color: #af3541 !important; }
+#statusPanel .status-buttons-container [data-tooltip="アラーム解除"], #statusPanel .status-buttons-container [data-tooltip="スリープ"] { color: #586372; }
+#dashboard > .buttons-bar > .dropdown > .btn { background: #fff; border: 1px solid var(--mk-line); color: #657386; }
+
+/* Position readouts: a strong work coordinate and a quieter machine coordinate. */
+#jogPanel .jog-position-ctrl { background: #fff; border: 0; border-bottom: 1px solid var(--mk-line); box-shadow: none; border-radius: 0; padding: 6px 12px; container-type: inline-size; }
+#jogPanel .jog-position-ctrl::before { color: #1764d8; font-size: 24px; font-weight: 700; }
+#jogPanel .jog-position-value { color: #1a2533; font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-weight: 650; }
+/* Reserve ten monospaced characters after the 70px axis/coordinate labels. */
+#jogPanel .jog-position-value:nth-child(4) { font-size: clamp(16px,calc((100cqi - 70px) / 6.1),34px); }
+#jogPanel .jog-position-value:nth-child(2), #jogPanel .jog-position-sub-header { color: #616f80; }
+#jogPanel .jog-position-sub-header::before { font-weight: 500; }
+
+/* Preserve the equal-spacing directional pad and native hit areas. */
+#jogPanel .jog-buttons-container :is([id^="btn+"],[id^="btn-"]) { background: #a9b8ca !important; border: 0; box-shadow: none !important; color: #24364d; }
+#jogPanel .jog-buttons-container :is([id^="btn+"],[id^="btn-"])::before { font-weight: 650; background: #fff; color: #24364d; }
+#jogPanel .jog-buttons-container :is([id^="btn+"],[id^="btn-"]):hover { background: #4383df !important; color: #175cbd; }
+#jogPanel .jog-buttons-container :is([id^="btn+"],[id^="btn-"]):hover::before { background: #edf4ff; }
+#jogPanel #btnStop { border: 1px solid #e1c7cb !important; border-radius: 6px !important; background: #fff8f8 !important; color: #a83744 !important; }
+#jogPanel #btnStop::before { font-weight: 650; }
+#jogPanel .jog-buttons-main-container::after { color: #8190a1; font-weight: 500; }
+#jogPanel .jog-distance-selector-header { background: transparent; border: 0; color: #5b6879; }
+#jogPanel .jog-distance-selector-header::before { font-weight: 550; }
+#jogPanel .jog-distance-selector-container { gap: 0 3px; }
+#jogPanel .jog-distance-selector-container label { border: 1px solid #dbe2eb; background: #f6f8fb; color: #3e4b5d; font-weight: 600; box-shadow: none !important; }
+#jogPanel .jog-distance-selector-container input:checked + label { background: #1764d8 !important; border-color: #1764d8 !important; color: #fff !important; }
+#jogPanel .jog-axis-group:first-child::before { background: transparent; color: #365f8e; border-bottom: 1px solid #d9e6f5; }
+#jogPanel .jog-axis-group:nth-child(2)::before { background: transparent; color: #826b26; border-bottom: 1px solid #e8deb9; }
+#jogPanel .jog-buttons-container [id^="btnZ"], #jogPanel #btnZAll { background: #edf4ff !important; border: 1px solid #c4d6ef !important; color: #245993 !important; }
+#jogPanel .jog-buttons-container [id^="btnH"], #jogPanel #btnHAll { background: #fffbef !important; border: 1px solid #e5d69f !important; color: #745a19 !important; }
+#jogPanel #btnHAll, #jogPanel #btnZAll { border-left-width: 3px !important; }
+
+#SpindlePanel .panel-body-dashboard { padding: 2px 0 0; gap: 4px; }
+#SpindlePanel .extra-control { border: 0; border-bottom: 1px solid var(--mk-line); }
+#SpindlePanel .extra-control-header { background: #fff; color: #5c697a; font-weight: 500; min-height: 44px; }
+#SpindlePanel .extra-control-value { color: #172a41; font-size: 23px; background: #fff; box-shadow: none; }
+#SpindlePanel legend label, #SpindlePanel legend label::before { color: #647386; }
+#dashboard #SpindlePanel button:is([data-tooltip="主軸を正転"],[data-tooltip="主軸を停止"]) { background: #fff !important; color: #304154 !important; border: 1px solid var(--mk-line) !important; border-radius: 5px !important; }
+#dashboard #SpindlePanel button:is([data-tooltip="主軸を正転"],[data-tooltip="主軸を停止"]).btn-primary { background: #1764d8 !important; color: #fff !important; border-color: #1764d8 !important; }
+#SpindlePanel .form-group .form-label { color: #526174; }
+#SpindlePanel .form-group .form-label { flex: 0 1 128px; min-width: 0; }
+#SpindlePanel .form-group .input-group { flex: 1 0 104px; min-width: 104px; }
+#OverridesPanel .extra-control-value { background: #edf4ff; color: #175cbd; box-shadow: none; border-radius: 4px; }
+#OverridesPanel .states-buttons-container button { background: #fff; border: 1px solid var(--mk-line); color: #24364d; }
+#OverridesPanel .extra-control-header::before { color: #5c6877; }
+#dashboard #ProbePanel .extra-control-header { background: transparent; color: #667384; }
+#dashboard #ProbePanel .extra-control-value, #dashboard #ProbePanel .badge-container { background: #edf2f7; color: #46637e; box-shadow: none; }
+#dashboard #ProbePanel .badge-label { background: transparent; color: #46637e; }
+#dashboard #ProbePanel [data-tooltip="プローブ測定を開始"] { background: #edf4ff; color: #175cbd; border: 1px solid #c4d6ef; border-radius: 5px !important; }
+
+#filesPanel .files-list { border: 1px solid #dbe2eb; border-radius: 4px; box-shadow: none; background: #fff; }
+#filesPanel .files-list .filename { color: #28384d; }
+#filesPanel .files-list button { background: #f7f9fc; border: 1px solid #dbe2eb; color: #425775; }
+#filesPanel .files-list button[data-tooltip="ファイルを再生"] { color: #1764d8; background: #edf4ff; }
+#filesPanel .files-list-footer { background: #fff; color: #617185; }
+#filesPanel .input-group { margin-bottom: 4px !important; }
+#filesPanel .files-list-footer { padding-block: 4px !important; }
+#filesPanel .form-select { background: #f6f8fb; }
+#filesPanel .file-status { color: #3d765b; }
+#terminalPanel .terminal { background: #fafbfd; color: #4a5667; border: 1px solid #e2e7ee; box-shadow: none; padding: 7px; }
+#terminalPanel .terminal .echo { color: #7a8797; }
+#terminalPanel .terminal .info { color: #356354; }
+#dashboard #notificationsPanel > .panel-body { background: #fff; border: 1px solid #e2e7ee; color: #5a6878; border-radius: 4px; }
+#notificationsPanel .notification-line { color: #394b61; }
+#notificationsPanel .text-error { color: #a72836 !important; }
+#dashboard .mk-parameters > summary, #dashboard .mk-file-capacity > summary { background: #f6f8fb; color: #51657e; border: 1px solid #dbe2eb; border-radius: 4px; box-shadow: none; }
+#dashboard .mk-parameter-content, #dashboard .mk-rapid-parameters > .field-group-content, #dashboard .mk-fold-panel > .panel-body { background: #fff; border: 1px solid #cad5e4; border-radius: 6px; box-shadow: 0 8px 25px #233d5b22; }
+#dashboard .mk-fold-panel > summary.navbar { background: #fff; border: 1px solid var(--mk-line); }
+#app .tooltip::after, #jogPanel .jog-container > .m-1:not(.jog-positions-ctrls)::after { background: #1e2c3d; color: #fff; border: 1px solid #40526b; border-radius: 6px; box-shadow: 0 5px 16px #18283a26; }
+.menu { background: #fff; border: 1px solid #d4dde8; box-shadow: 0 6px 20px #263b5522 !important; padding: 6px; }
+.modal-container { background: #fff; border: 1px solid #cbd5e2; box-shadow: 0 16px 60px #162b4c40 !important; }
+#btnEStop, #btnEStop:hover { background: #c63343 !important; color: #fff !important; border: 1px solid #b12736 !important; border-radius: 7px !important; box-shadow: none !important; }
+#btnEStop:hover { background: #b82b3a !important; }
+#btnEStop .text-error, #btnEStop svg { color: #fff !important; }
+#extra_content_metallkraft-news, #extra_content_metallkraft-shortcuts, #extra_content_metallkraft-job { background: #fff; }
+#dashboard #metallkraft-job { border-top: 1px solid var(--mk-line); background: transparent; }
+@media (min-width: 900px) and (min-height: 768px) {
+  #statusPanel .status-ctrls { min-width: 0; max-width: calc(100% - 50px); }
+  #statusPanel .status-ctrls .extra-control { min-width: 0; flex: 1 1 auto; }
+  #statusPanel .status-ctrls .extra-control-value { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 20px; padding-block: 0; }
+}
+@media (max-width: 899px), (max-height: 767px) {
+  #dashboard > .buttons-bar { background: var(--mk-page); }
+  #dashboard .panels-container { gap: 18px; }
+}
+
+/* Selection is local preparation; the single start action is separate from the list. */
+#filesPanel .file-line.mk-file-selected { background: #edf4ff; border-left: 4px solid #1764d8; }
+#filesPanel .file-line-name { min-width: 0; flex: 1; }
+#filesPanel .file-line-name label { overflow-wrap: anywhere; line-height: 1.3; }
+#filesPanel .file-line-controls { flex: 0 0 auto; }
+#filesPanel .file-line-controls > div:first-child { display: none; }
+#filesPanel .file-line button[data-tooltip="経路を選択"] { min-width: 58px; padding: 4px 8px; color: #1764d8; }
+#filesPanel .file-line button[data-tooltip="経路を選択"] label { display: inline; }
+#filesPanel .mk-file-management { position:relative; margin-left:4px; }
+#filesPanel .mk-file-management > summary { list-style:none; width:30px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; color:#526174; }
+#filesPanel .mk-file-management > summary::-webkit-details-marker { display:none; }
+#filesPanel .mk-file-management:not([open]) > button { display:none; }
+#filesPanel .mk-file-management[open] > button { position:absolute; right:30px; top:0; z-index:10; background:#fff; }
+.mk-job-start { display: contents; }
+.mk-selected-file { padding: 8px; display: grid; gap: 4px; border-top: 1px solid #d8dee6; background: #fff; }
+.mk-selected-file strong { overflow-wrap: anywhere; line-height: 1.3; }
+.mk-selected-file span { color: #5e6978; font-size: 16px; }
+#dashboard #mk-start-job { min-height: 70px; width: 100%; font-size: 24px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; background: #1764d8 !important; color: #fff !important; border: 1px solid #1764d8 !important; transition: none; }
+#dashboard #mk-start-job:hover { background: #1254b8 !important; }
+#dashboard #mk-start-job:disabled { background: #dfe5ec !important; color: #6b7786 !important; border-color: #d1d9e3 !important; opacity: 1; cursor: not-allowed; }
+#mk-start-job svg { width: 26px; height: 26px; }
+.mk-start-confirm strong { display: block; overflow-wrap: anywhere; padding: 12px 0; }
+body:has(.mk-start-confirm) #btnEStop { z-index: 100001; }
+body:has(.mk-start-confirm) #dashboard > .buttons-bar { z-index: 100001; }
+#dashboard #OverridesPanel { position: relative; min-height: 32px !important; }
+#dashboard #OverridesPanel > summary { cursor: pointer; height: 30px; min-height: 30px; }
+#dashboard #OverridesPanel > summary::after { content: "+"; margin-left: auto; font-size: 20px; }
+#dashboard #OverridesPanel[open] > summary::after { content: "−"; }
+#dashboard #OverridesPanel > summary > .navbar-section:last-child { display: none; }
+#dashboard #OverridesPanel:not([open]) > .panel-body { display: none !important; }
+#dashboard #OverridesPanel[open] > .panel-body { position: absolute; z-index: 1100; left: 0; bottom: calc(100% + 8px); width: max(100%,300px); padding: 44px 10px 10px !important; min-height: 138px !important; background: white; border: 1px solid #cbd5e2; border-radius: 6px; box-shadow: 0 8px 25px #233d5b22; }
+#OverridesPanel > summary .navbar-section:first-child { padding-right:0; }
+@media (min-width: 900px) and (min-height: 768px) {
+  #dashboard #OverridesPanel { align-self: start; }
+  #dashboard #mk-start-job { position: fixed; bottom: 8px; right: calc(max(215px,(100% - 40px) / 4.5) + 16px); width: max(215px,calc((100% - 40px) / 4.5)); height: 70px; z-index: 1001; margin: 0; }
+  #filesPanel .mk-selected-file { padding:4px 8px; gap:0; min-height:48px; height:48px; flex:0 0 48px; overflow:hidden; }
+  #filesPanel .mk-selected-file strong, #filesPanel .mk-selected-file span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:20px; }
+  #dashboard #filesPanel .files-list { min-height:46px !important; }
+}
+
+/* Compact presentation. Keep native controls, errors and command handlers intact. */
+#dashboard #OverridesPanel, #dashboard #notificationsPanel,
+#filesPanel .mk-file-capacity, #filesPanel .mk-selected-file strong,
+#filesPanel .mk-selected-file[data-phase="ready"],
+#filesPanel .mk-selected-file[data-phase="sent"],
+#filesPanel .mk-selected-file[data-phase="empty"]:has(span:is([title="加工ファイルを選択"],[title="ファイルを再選択してください"])),
+#ProbePanel .status-ctrls { display: none !important; }
+#filesPanel .mk-selected-file { height:auto; min-height:0; flex:0 0 auto; padding:4px 6px; }
+#filesPanel .mk-selected-file span { display:block !important; white-space:normal; overflow-wrap:anywhere; }
+#filesPanel .mk-selected-file[data-phase="error"] { color:#a72836; }
+#filesPanel .files-list-footer { min-height:0; height:auto; padding:0 !important; }
+#dashboard .panel-dashboard > .navbar .navbar-section:first-child > :is(strong,svg) { display:none; }
+#dashboard #macrosPanel > summary strong { display:inline; }
+#dashboard :is(#SpindlePanel,#ProbePanel,#metallkraft-preview,#metallkraft-news) > .navbar { display:none; }
+#dashboard :is(#jogPanel,#filesPanel,#terminalPanel) > .navbar { height:28px; min-height:28px; }
+#SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) legend { display:none; }
+#dashboard #ProbePanel { padding:0 40px 0 0; border:0; box-sizing:border-box; }
+#ProbePanel .mk-probe-parameters > summary { top:0; right:0; width:36px; height:64px; font-size:0; display:flex; align-items:center; justify-content:center; }
+#ProbePanel .mk-probe-parameters > summary::after { font-size:20px; }
+#dashboard #ProbePanel [data-tooltip="プローブ測定を開始"] { height:64px; min-height:64px; background:#287a4a !important; color:#fff !important; border-color:#246c43 !important; }
+#dashboard #ProbePanel [data-tooltip="プローブ測定を開始"]:enabled:hover { background:#21663e !important; }
+#ProbePanel .field-group-content > .states-buttons-container { width:100%; padding:0; margin:0; }
+#ProbePanel [data-tooltip="プローブ測定を開始"] .insensitive::after { content:"プローブ"; font-size:20px; }
+#dashboard #mk-start-job, #dashboard #btnEStop { height:80px; min-height:80px; font-size:24px; border-radius:6px !important; }
+
+/* Keep the native menu on the command row without moving its handlers. */
+#dashboard #terminalPanel { display:grid; grid-template-columns:minmax(0,1fr) 36px; grid-template-rows:36px minmax(0,1fr); gap:4px; border:0; }
+#dashboard #terminalPanel > .navbar { grid-area:1 / 2; height:36px; min-height:36px; padding:0; z-index:3; }
+#terminalPanel > .navbar > .navbar-section:first-child { display:none; }
+#terminalPanel > .navbar > .navbar-section:last-child, #terminalPanel > .navbar .full-height { width:100%; height:100%; }
+#terminalPanel > .navbar .dropdown, #terminalPanel > .navbar .dropdown-toggle { width:36px; height:36px; min-height:36px; margin:0 !important; }
+#terminalPanel > .navbar .dropdown-toggle { display:flex; align-items:center; justify-content:center; }
+#terminalPanel > .input-group { grid-area:1 / 1; min-width:0; margin:0 !important; }
+#terminalPanel > .terminal { grid-area:2 / 1 / 3 / 3; }
+#terminalPanel > .show-low { display:none !important; }
+.mk-start-confirm p { display:none; }
+
+@keyframes mk-running-pulse { 0%,100% { background-color:#dceee2; } 50% { background-color:#a9d7b9; } }
+#statusPanel .status-ctrls[data-machine-state="Run"] > .extra-control { animation:mk-running-pulse 1.6s ease-in-out infinite; border-radius:4px; }
+#statusPanel .status-ctrls[data-machine-state="Run"] .big-text { color:#195b34; background:transparent; }
+@media (prefers-reduced-motion:reduce) {
+  #statusPanel .status-ctrls[data-machine-state="Run"] > .extra-control { animation:none; background:#a9d7b9; }
+}
+#dashboard :is(#jogPanel,#ProbePanel) button:disabled { opacity:1; background:#e2e5e9 !important; color:#89919a !important; border-color:#c7cdd4 !important; cursor:not-allowed; box-shadow:none !important; transition:none; }
+#jogPanel .jog-buttons-container :is([id^="btn+"],[id^="btn-"]):disabled::before { background:#e2e5e9; color:#89919a; }
+#jogPanel .jog-position-clickable[aria-disabled="true"] { cursor:default; }
+
+@media (min-width:900px) and (min-height:768px) {
+  #dashboard { height:calc(100dvh - 50px); min-height:0; box-sizing:border-box; grid-template-rows:44px 214px 28px minmax(0,1fr) 88px 80px; }
+  #dashboard #filesPanel { grid-area:2 / 2 / 6 / 3; padding-bottom:102px; }
+  #dashboard #metallkraft-job { grid-area:2 / 2 / 6 / 3; }
+  #dashboard #ProbePanel { grid-area:6 / 2 / 7 / 3; align-self:end; }
+  #dashboard #terminalPanel { grid-area:4 / 4 / 6 / 5; }
+  #dashboard #jogPanel { --jog-cell:min(64px,calc((100dvh - 666px) / 3),calc((max(215px,(100cqw - 24px) / 4.5) - 12px) / 4)); --jog-rows:repeat(3,var(--jog-cell)) 48px 48px 20px 36px 8px 20px 36px; }
+  #jogPanel .jog-container > .m-1:not(.jog-positions-ctrls), #jogPanel .jog-extra-buttons-container { grid-area:2 / 3 / 6 / 4; margin-top:32px !important; margin-bottom:174px !important; align-self:start; }
+  #jogPanel .jog-axis-group::before { height:20px; min-height:20px; line-height:20px; padding-block:0; }
+  #jogPanel .jog-distance-selector-container { grid-template-rows:20px 28px; }
+  #jogPanel .jog-distance-selector-header { height:20px; min-height:20px; line-height:20px; }
+  #jogPanel .jog-buttons-container :is([id^="btnH"],[id^="btnZ"]) { padding:0; }
+  #jogPanel .jog-buttons-container :is([id^="btnH"],[id^="btnZ"])::before { line-height:16px; }
+  #dashboard #SpindlePanel .panel-body-dashboard { grid-area:2 / 3 / 6 / 4; align-self:end; margin-top:0; height:166px !important; padding:0; }
+  #SpindlePanel .extra-control-header { min-height:40px; }
+  #SpindlePanel .form-group { margin-top:2px; }
+  #dashboard #metallkraft-preview > .panel-body { padding-top:0; }
+  #dashboard #mk-start-job, #dashboard #btnEStop { bottom:8px; width:max(215px,calc((100% - 40px) / 4.5)); }
+}
+@media (max-width:899px), (max-height:767px) {
+  #dashboard #SpindlePanel { order:-1; }
+  #dashboard #ProbePanel { order:0; }
+  #dashboard #mk-start-job, #dashboard #btnEStop { width:100%; min-width:0; }
+  #dashboard > .buttons-bar .quick-buttons-bar { width:100%; }
+}
+@media (min-width:900px) and (max-width:1100px) and (min-height:768px), (min-width:900px) and (min-height:768px) and (max-height:800px) {
+  #statusPanel .status-ctrls::before { display:none; }
+  #dashboard #jogPanel #btnStop { padding:0; }
+  #jogPanel #btnStop::before { content:"停止"; white-space:nowrap; font-size:16px; }
+}
+@media (max-width: 899px), (max-height: 767px) {
+  /* Native extension positioning listens to #main scroll, not document scroll. */
+  html:has(#dashboard), body:has(#dashboard) { height:100dvh; min-height:0; overflow:hidden; }
+  body:has(#dashboard) #app { height:100dvh; min-height:0; }
+  #main.main-page-container:has(#dashboard) { height:calc(100dvh - 144px); min-height:0; overflow:auto; scroll-padding-block:54px 16px; }
+  #dashboard .panel-dashboard { scroll-margin-bottom:100px; }
+  #dashboard #mk-start-job { position: static; margin: 6px 0; }
+  #dashboard { padding:6px 6px 12px; }
+  #dashboard .panels-container { grid-template-columns:minmax(0,1fr); }
+  #dashboard #btnEStop { position:fixed; bottom:6px; left:6px; right:6px; width:calc(100% - 12px); }
+  #dashboard #OverridesPanel[open] > .panel-body { position: relative; bottom: auto; width: 100%; margin-top: 8px; }
+  #dashboard #filesPanel { order: -3; }
+  #dashboard #OverridesPanel .mk-parameter-content,
+  #dashboard #OverridesPanel .mk-rapid-parameters > .field-group-content { bottom: calc(100% + 48px); }
+  #dashboard #OverridesPanel:has(.mk-rapid-parameters[open]) .extra-control:nth-child(3) { bottom: calc(100% + 100px); }
+}
+
+/* Align the existing speed controls with the distance rows, without moving DOM nodes. */
+#jogPanel { --jog-selector-columns:minmax(44px,1.4fr) minmax(32px,1.1fr) repeat(2,minmax(28px,1fr)) minmax(44px,1fr); }
+#dashboard #jogPanel > .navbar { height:52px; min-height:52px; padding:0; display:block; border:0; position:relative; z-index:3; }
+#dashboard #jogPanel > .navbar > .navbar-section { display:none; }
+#jogPanel .mk-jog-speed { display:grid; grid-template-rows:24px 28px; gap:0; width:100%; }
+#jogPanel .mk-jog-speed-caption { display:flex; align-items:center; justify-content:space-between; gap:4px; padding:0 4px; font-size:16px; font-weight:550; line-height:20px; color:#5b6879; border:1px solid #d8dee6; border-radius:5px; background:#f4f6f9; }
+#jogPanel .mk-jog-speed-caption > span:first-child::after { content:" (mm/min)"; }
+#jogPanel .mk-jog-speed-value { display:none; }
+#dashboard #jogPanel .jog-distance-selector-header { border:1px solid #d8dee6 !important; border-radius:5px; background:#f4f6f9; }
+#jogPanel .mk-jog-speed-buttons { display:grid; grid-template-columns:var(--jog-selector-columns); gap:3px; }
+#jogPanel .jog-distance-selector-container { grid-template-columns:var(--jog-selector-columns); }
+#dashboard #jogPanel .mk-jog-speed-buttons .btn { display:block; min-width:0; height:28px; min-height:28px; padding:2px; margin:0; font-size:16px; font-weight:600; letter-spacing:0; line-height:20px; background:#f6f8fb; color:#3e4b5d; border:1px solid #dbe2eb; }
+#dashboard #jogPanel .mk-jog-speed-buttons [aria-checked="true"] { background:var(--mk-blue) !important; color:#fff !important; border-color:var(--mk-blue) !important; }
+#app #jogPanel .mk-jog-speed-buttons .tooltip::after { left:0; right:auto; max-width:min(215px,calc(100vw - 32px)); white-space:normal; transform:translateY(4px); }
+#app #jogPanel .mk-jog-speed-buttons .tooltip:nth-child(3)::after { left:50%; transform:translate(-50%,4px); }
+#app #jogPanel .mk-jog-speed-buttons .tooltip:nth-child(n+4)::after { left:auto; right:0; }
+#jogPanel .jog-axis-group:first-child::before { grid-row:7; }
+#jogPanel :is(#btnZX,#btnZY,#btnZZ,#btnZAll) { grid-row:8; }
+#jogPanel .jog-axis-group:nth-child(2)::before { grid-row:10; }
+#jogPanel :is(#btnHX,#btnHY,#btnHZ,#btnHAll) { grid-row:11; }
+@media (min-width:900px) and (min-height:768px) {
+  #dashboard #jogPanel { --jog-cell:min(64px,calc((100dvh - 682px) / 3),calc((max(215px,(100cqw - 24px) / 4.5) - 12px) / 4)); --jog-rows:repeat(3,var(--jog-cell)) 48px 48px 48px 20px 36px 0px 20px 36px; }
+  #dashboard #jogPanel > .navbar { grid-area:2 / 3 / 6 / 4; align-self:start; margin-top:calc(3 * var(--jog-cell) + 120px); height:48px; min-height:48px; }
+  #jogPanel .jog-container > .m-1:not(.jog-positions-ctrls), #jogPanel .jog-extra-buttons-container { margin-top:4px !important; }
+  #jogPanel .mk-jog-speed, #jogPanel .jog-distance-selector-container { grid-template-rows:20px 28px; }
+}
+@media (max-width:899px), (max-height:767px) {
+  #dashboard #jogPanel { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; --jog-rows:repeat(3,var(--jog-cell)) 52px 52px 52px 26px 48px 8px 26px 48px minmax(64px,1fr); }
+  #jogPanel .jog-container { display:contents; }
+  #jogPanel .jog-positions-ctrls { grid-area:1 / 1; }
+  #dashboard #jogPanel > .navbar { grid-area:2 / 1; align-self:start; margin-top:calc(3 * var(--jog-cell) + 124px); }
+  #jogPanel #btnStop { grid-row:12; }
+}
+
+/* The added Z-side control uses the same native jog-cancel handler. */
+#ProbePanel [data-tooltip="プローブ測定を開始"] svg { display:none; }
+#jogPanel .jog-buttons-main-container::after { display:none; }
+#dashboard #jogPanel #btnStopZ { grid-area:2 / 1 / 3 / -1; justify-self:center; align-self:center; width:var(--jog-cell); height:var(--jog-cell); min-height:0; padding:0; margin:0; transform:translateX(calc(1.5 * (var(--jog-cell) + 4px))); border:1px solid #e1c7cb !important; border-radius:6px !important; background:#fff8f8 !important; color:#a83744 !important; }
+#jogPanel #btnStopZ .insensitive { display:none; }
+#jogPanel #btnStopZ::before { content:"移動\a停止"; white-space:pre-line; font-size:16px; font-weight:650; line-height:1.2; }
+#app #btnStopZ { --mk-help:"XY側と同じジョグ移動の停止です。加工プログラムや主軸の停止にはクイック停止を使ってください。"; }
+#app #btnStopZ::after { left:auto; right:0; transform:translateY(4px); }
+#dashboard #jogPanel .jog-distance-selector-container input:disabled + label,
+#dashboard #jogPanel .mk-jog-speed-buttons button:disabled,
+#dashboard #SpindlePanel fieldset:disabled :is(button,input):disabled { background:#e2e5e9 !important; color:#89919a !important; border-color:#c7cdd4 !important; opacity:1; cursor:not-allowed; transition:none; }
+#dashboard #SpindlePanel fieldset:disabled { border:0; }
+#dashboard #mk-start-job.mk-job-status { display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:24px 6px 20px; align-content:center; gap:4px; padding:7px 12px; background:#e1efe7 !important; color:#205e3b !important; border-color:#b9d5c5 !important; cursor:default; container-type:inline-size; }
+#mk-start-job .mk-job-status-heading, #mk-start-job .mk-job-status-detail { display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:0; }
+#mk-start-job .mk-job-status-heading { font-size:20px; line-height:24px; }
+#mk-start-job .mk-job-status-detail { font-size:16px; line-height:20px; font-weight:400; }
+#mk-start-job.mk-job-status progress { display:block; width:100%; height:6px; margin:0; border:0; accent-color:#287a4a; }
+#mk-start-job.mk-job-status progress::-webkit-progress-bar { background:#c8dbcf; }
+#mk-start-job.mk-job-status progress::-webkit-progress-value { background:#287a4a; }
+#dashboard #mk-start-job.mk-job-status:not([data-job-state="Run"]) { background:#fff0cf !important; color:#72561d !important; border-color:#dcc38e !important; }
+#mk-start-job.mk-job-status:not([data-job-state="Run"]) progress::-webkit-progress-value { background:#ad822c; }
+@container (max-width:250px) {
+  #mk-start-job .mk-job-status-heading > span { font-size:16px; }
+  #mk-start-job .mk-job-status-heading > span::before { content:"読込 "; }
+  #mk-start-job .mk-job-status-detail > span:first-child { display:none; }
+  #mk-start-job .mk-job-status-detail { justify-content:flex-end; }
+}
+@media (min-width:900px) and (min-height:768px) {
+  #dashboard #filesPanel { padding-bottom:0; }
+}
+@media (min-width:900px) and (max-width:1100px) and (min-height:768px), (min-width:900px) and (min-height:768px) and (max-height:800px) {
+  #jogPanel #btnStopZ::before { content:"停止"; white-space:nowrap; }
+}
+
+/* The library icon depicts downward probing onto a material surface. */
+#ProbePanel [data-tooltip="プローブ測定を開始"] .insensitive::before { content:""; display:inline-block; width:30px; height:30px; flex:0 0 30px; background:currentColor; mask:url("__PROBE_ICON__") center / contain no-repeat; margin-right:8px; }
+#dashboard #filesPanel { display:grid; grid-template-columns:minmax(0,1fr) 36px; grid-template-rows:36px minmax(0,1fr) auto auto; gap:4px 0; }
+#dashboard #filesPanel > .navbar { grid-area:1 / 2; height:36px; min-height:36px; padding:0; z-index:5; }
+#filesPanel > .navbar > .navbar-section:first-child { display:none; }
+#filesPanel > .navbar .navbar-section:last-child, #filesPanel > .navbar .full-height, #filesPanel > .navbar .dropdown { width:36px; height:36px; margin:0; }
+#filesPanel > .navbar .dropdown-toggle { width:36px; height:36px; min-height:36px; padding:0; margin:0 !important; }
+#filesPanel > .input-group { grid-area:1 / 1; min-width:0; margin:0 4px 0 0 !important; align-items:center; }
+#filesPanel > .input-group > .form-control { min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#filesPanel > .files-list { grid-area:2 / 1 / 3 / 3; margin:0 !important; min-height:0; }
+#filesPanel > .mk-job-start { grid-area:3 / 1 / 4 / 3; display:block; min-width:0; }
+#filesPanel > .files-list-footer { grid-area:4 / 1 / 5 / 3; }
+#dashboard #macrosPanel { display:flex; flex-direction:column; height:108px !important; min-height:0; border:0; background:transparent; }
+#dashboard #macrosPanel > .navbar { height:28px; min-height:28px; padding:0 4px; border:0; }
+#dashboard #macrosPanel > .navbar strong { display:inline; font-size:16px; }
+#macrosPanel > .navbar .navbar-section:last-child { display:none; }
+#dashboard #macrosPanel > .panel-body { position:static; width:100%; flex:1 1 76px; max-height:76px !important; min-height:0; padding:0 !important; border:0; box-shadow:none; overflow-y:auto !important; overflow-x:hidden !important; overscroll-behavior:contain; scrollbar-gutter:stable; }
+
+/* Presentation-only cleanup: native commands and file contents are unchanged. */
+#filesPanel .file-line[data-system-entry="true"] { display:none !important; }
+#dashboard #jogPanel :is(#btnZX,#btnZY,#btnZZ,#btnHX,#btnHY,#btnHZ),
+#jogPanel .jog-axis-group::before { display:none; }
+#dashboard #jogPanel #btnZAll { grid-area:7 / 1 / 8 / -1; }
+#dashboard #jogPanel #btnHAll { grid-area:8 / 1 / 9 / -1; }
+#jogPanel #btnZAll::before { content:"全軸の作業原点を設定"; }
+#jogPanel #btnHAll::before { content:"全軸を機械原点へ復帰"; }
+#app #jogPanel :is(#btnZAll,#btnHAll)::after { left:0; right:0; max-width:100%; transform:none; }
+#dashboard #jogPanel { --jog-rows:repeat(3,var(--jog-cell)) 52px 52px 52px 40px 40px; }
+@media (min-width:900px) and (min-height:768px) {
+  #dashboard #jogPanel { --jog-cell:min(64px,calc((100dvh - 622px) / 3),calc((max(215px,(100cqw - 24px) / 4.5) - 12px) / 4)); --jog-rows:repeat(3,var(--jog-cell)) 48px 48px 48px 36px 36px; }
+}
+#dashboard #jogPanel .jog-buttons-container :is([id^="btn+"],[id^="btn-"]) { clip-path:none; border:1px solid #c9d3df !important; border-radius:6px !important; background:#fff !important; color:#31465d; }
+#dashboard #jogPanel .jog-buttons-container :is([id^="btn+"],[id^="btn-"])::before { inset:0; padding:0 0 5px; align-items:flex-end; border-radius:5px; background:transparent; line-height:20px; }
+#app #dashboard #jogPanel .jog-buttons-container :is([id^="btn+"],[id^="btn-"])::after { content:""; display:block; position:absolute; top:4px; bottom:auto; left:50%; right:auto; width:18px; height:18px; min-width:0; max-width:none; padding:0; margin:0; border:0; border-radius:0; background:currentColor; color:inherit; box-shadow:none; mask:var(--jog-icon) center / contain no-repeat; transform:translateX(-50%); opacity:1; visibility:visible; animation:none; transition:none; pointer-events:none; }
+#jogPanel :is([id="btn+Y"],[id="btn+Z"]) { --jog-icon:url("__JOG_UP_ICON__"); }
+#jogPanel :is([id="btn-Y"],[id="btn-Z"]) { --jog-icon:url("__JOG_DOWN_ICON__"); }
+#jogPanel [id="btn-X"] { --jog-icon:url("__JOG_LEFT_ICON__"); }
+#jogPanel [id="btn+X"] { --jog-icon:url("__JOG_RIGHT_ICON__"); }
+#dashboard #jogPanel .jog-buttons-container :is([id^="btn+"],[id^="btn-"]):hover { background:#edf4ff !important; border-color:#4383df !important; }
+#dashboard #jogPanel .jog-buttons-container :is([id^="btn+"],[id^="btn-"]):disabled { background:#e2e5e9 !important; color:#89919a; border-color:#c7cdd4 !important; }
+#macrosPanel > .panel-body::before { display:none !important; }
+#macrosPanel .macro-buttons-panel { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; margin:0; }
+#dashboard #macrosPanel .macro-buttons-panel button { min-width:0; height:36px; min-height:36px; margin:0 !important; padding:2px 4px; font-size:16px; background:#fff; color:#28384d; border:1px solid #cad5e4; }
+#macrosPanel .macro-buttons-panel button .show-low { display:inline !important; }
+#macrosPanel .macro-buttons-panel button label { display:inline !important; white-space:normal; overflow-wrap:anywhere; }
+@media (min-width:900px) and (min-height:768px) {
+  #dashboard #filesPanel { grid-area:2 / 2 / 6 / 3; padding-bottom:116px; }
+  #dashboard #macrosPanel { grid-area:2 / 2 / 6 / 3; align-self:end; }
+  #dashboard #metallkraft-news { grid-row-end:7; }
+}
+@media (max-width:899px), (max-height:767px) {
+  #dashboard #filesPanel { min-height:300px; grid-template-rows:36px minmax(150px,1fr) auto auto; }
+  #dashboard #macrosPanel { order:-3; margin-bottom:8px; }
+}

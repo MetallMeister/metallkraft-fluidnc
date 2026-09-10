@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja" id="mk-preview-document">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' blob:; worker-src blob:; style-src 'unsafe-inline'; connect-src 'none'; img-src data:; form-action 'none'; base-uri 'none'">
+<title>加工予定経路</title>
+<style>
+*{box-sizing:border-box;letter-spacing:0}html,body{margin:0;height:100%;background:#080808;color:#eee;font:16px -apple-system,BlinkMacSystemFont,Meiryo,sans-serif;overflow:hidden}
+body{display:grid;grid-template-rows:36px minmax(70px,1fr) 28px 28px}header{display:flex;gap:5px;align-items:center;padding:3px 6px;border-bottom:1px solid #444;background:#222;min-width:0}
+button{border:1px solid #888;border-radius:0;background:#e8e8e8;color:#181818;display:flex;align-items:center;justify-content:center;gap:5px;min-width:30px;height:28px;padding:2px 6px;cursor:pointer;font:inherit;font-weight:600;flex-shrink:0}button:hover{background:#fff}button:focus-visible,canvas:focus-visible{outline:2px solid #fff;outline-offset:-2px}svg{width:18px;height:18px}
+#preview-filename{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px}canvas{display:block;width:100%;height:100%;min-height:0;touch-action:none}
+#preview-info{margin:0;padding:3px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#181818;font-size:16px}#preview-info[data-state=error]{color:#ffb3b3}
+footer{padding:3px 7px;font-size:16px;color:#eee;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}input{display:none}
+/* Paint only: keep the same iframe geometry and local preview controls. */
+header{background:#c4c4bf;border-bottom-color:#494949;color:#171717;box-shadow:inset 0 1px #fff}
+button{background:#d4d4cf;border-color:#fbfaf5 #474747 #474747 #fbfaf5;box-shadow:inset 1px 1px #fff,inset -1px -1px #474747,inset 2px 2px #eeece6,inset -2px -2px #a09e98}
+button:hover{background:#e9e9e3}button:active{background:#000098;color:#fff;border-color:#474747 #f8f7f1 #f8f7f1 #474747;box-shadow:inset 1px 1px #474747,inset -1px -1px #fff,inset 2px 2px #90918c,inset -2px -2px #e9e8e2}
+button:focus-visible{outline-color:#252535}
+button:disabled{opacity:.45;cursor:default}
+/* View mode control only. */
+#preview-view-mode{display:flex;flex-shrink:0;gap:0}#preview-view-mode button{width:33px;padding:2px;font-weight:700}
+button[aria-pressed=true]{background:#000098;color:#fff;border-color:#474747 #f8f7f1 #f8f7f1 #474747;box-shadow:inset 1px 1px #474747,inset -1px -1px #fff,inset 2px 2px #90918c,inset -2px -2px #e9e8e2}
+/* End view mode control. */
+@media(max-width:420px){#open-preview span{display:none}}
+/* Narrow-column toolbar layout. */
+@media(max-width:280px){
+  body{grid-template-rows:68px minmax(70px,1fr) 28px 28px}
+  header{display:grid;grid-template-columns:66px repeat(4,minmax(30px,1fr));grid-template-rows:28px 28px;gap:4px;padding:3px 4px}
+  #open-preview{grid-area:1 / 1;width:30px;padding:2px;justify-self:start}
+  #preview-filename{grid-area:1 / 2 / 2 / 6}
+  #preview-view-mode{grid-area:2 / 1}
+  #cancel-preview{grid-area:2 / 2}#zoom-out{grid-area:2 / 3}#zoom-in{grid-area:2 / 4}#fit-preview{grid-area:2 / 5}
+  header>button:not(#open-preview){padding:2px}
+}
+/* End narrow-column toolbar layout. */
+</style>
+<style id="modern-presentation">
+header{background:#18232f;color:#e5ebf3;border-bottom:1px solid #364455;box-shadow:none}
+button{background:#293747;color:#edf3fb;border:1px solid #46576a;border-radius:4px;box-shadow:none;font-weight:550}
+button:hover{background:#3a4c62}button:active,button[aria-pressed=true]{background:#1764d8;color:#fff;border:1px solid #4087ed;box-shadow:none}
+button:focus-visible{outline-color:#fff}#preview-view-mode{gap:2px}
+#open-preview{display:none}
+#preview-info{background:#141b23;color:#d3dce8}footer{background:#0e141b;color:#b6c3d3}
+/* Native extensions inherit the host theme; keep the canvas document self-contained. */
+html#mk-preview-document, #mk-preview-document body { margin:0 !important; padding:0 !important; width:100%; height:100%; overflow:hidden !important; background:#080808; color:#eee; font:16px -apple-system,BlinkMacSystemFont,Meiryo,sans-serif; }
+#mk-preview-document body { display:grid; grid-template-rows:36px minmax(60px,1fr) 28px auto 28px; }
+#mk-preview-document header { display:flex; gap:5px; align-items:center; min-width:0; padding:3px 6px; background:#18232f; color:#e5ebf3; }
+#mk-preview-document button { display:flex; align-items:center; justify-content:center; flex-shrink:0; width:auto; min-width:30px; height:28px; padding:2px 6px; margin:0; font:inherit; font-weight:550; }
+#mk-preview-document #open-preview { display:none; }
+#mk-preview-document #preview-filename { min-width:0; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#mk-preview-document #preview-view-mode { display:flex; flex-shrink:0; gap:2px; }
+#mk-preview-document #preview-view-mode button { width:33px; padding:2px; }
+#mk-preview-document canvas { min-height:0; width:100%; height:100%; }
+#path-surface { position:relative; min-height:0; overflow:hidden; }
+#mk-preview-document #traversed-path { position:absolute; inset:0; pointer-events:none; }
+#mk-preview-document #traversed-path[hidden] { display:none; }
+#tool-marker { position:absolute; width:18px; height:18px; border:2px solid #64d9ff; border-radius:50%; background:#08151c; box-shadow:0 0 0 1px #080808; transform:translate(-50%,-50%); pointer-events:none; }
+#tool-marker::before, #tool-marker::after { content:""; position:absolute; background:#64d9ff; }
+#tool-marker::before { width:28px; height:2px; left:-7px; top:6px; }
+#tool-marker::after { width:2px; height:28px; top:-7px; left:6px; }
+#tool-marker[hidden] { display:none; }
+#mk-preview-document #preview-info, #mk-preview-document footer { margin:0; padding:3px 7px; font-size:16px; line-height:22px; }
+#preview-empty { display:none; padding:8px 12px; align-items:center; justify-content:center; flex-direction:column; gap:4px; text-align:center; pointer-events:none; background:#080808; }
+#preview-empty strong { font-size:22px; line-height:1.5; font-weight:600; }
+#preview-empty span { font-size:16px; color:#bfc3c9; line-height:1.5; }
+#mk-preview-document body:has(#preview-info[data-state=""]) #preview-empty { display:flex; }
+#mk-preview-document body:has(#preview-info[data-state=""]) { grid-template-rows:36px auto minmax(60px,1fr) auto; }
+#mk-preview-document body:has(#preview-info[data-state=""]) header { grid-row:1; }
+#mk-preview-document body:has(#preview-info[data-state=""]) #preview-empty { grid-row:2; }
+#mk-preview-document body:has(#preview-info[data-state=""]) #path-surface { grid-row:3; }
+#mk-preview-document body:has(#preview-info[data-state=""]) :is(#preview-info,footer) { display:none; }
+#mk-preview-document body:has(#preview-info[data-state=""]) #tool-position-readout { grid-row:4; }
+#tool-position-readout { padding:4px 7px; background:#080808; color:#64d9ff; pointer-events:none; font-size:16px; line-height:1.4; }
+#tool-position-values { display:block; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+#tool-position-readout[data-available="false"] { color:#bfc3c9; }
+@media(max-width:360px){
+  #preview-empty strong { font-size:18px; line-height:22px; }
+  #preview-empty span { display:none; }
+  #mk-preview-document body { grid-template-rows:64px minmax(60px,1fr) 28px auto 28px; }
+  #mk-preview-document body:has(#preview-info[data-state=""]) { grid-template-rows:36px auto minmax(60px,1fr) auto; }
+  #mk-preview-document body:has(#preview-info[data-state=""]) header { display:flex; }
+  #mk-preview-document body:has(#preview-info[data-state=""]) #preview-filename { display:none; }
+  #mk-preview-document header { display:grid; grid-template-columns:70px repeat(4,minmax(30px,1fr)); grid-template-rows:22px 28px; gap:3px; padding:3px 4px; }
+  #mk-preview-document #preview-filename { grid-area:1 / 1 / 2 / 6; }
+  #mk-preview-document #preview-view-mode { grid-area:2 / 1; }
+  #mk-preview-document #cancel-preview { grid-area:2 / 2; }#mk-preview-document #zoom-out { grid-area:2 / 3; }#mk-preview-document #zoom-in { grid-area:2 / 4; }#mk-preview-document #fit-preview { grid-area:2 / 5; }
+}
+</style>
+<body>
+<header>
+  <input id="gcode-file" type="file" accept=".nc,.gcode,.ngc,.tap,.txt">
+  <button id="open-preview" title="PCのGコードをプレビュー" aria-label="PCのGコードをプレビュー"><i data-lucide="folder-open"></i><span>プレビュー</span></button>
+  <span id="preview-filename"></span>
+  <div id="preview-view-mode" role="group" aria-label="経路の表示方式">
+    <button id="view-2d" data-view-mode="2d" aria-pressed="true" title="2D: 真上から表示 (XY)">2D</button>
+    <button id="view-3d" data-view-mode="3d" aria-pressed="false" title="3D: 斜めから表示">3D</button>
+  </div>
+  <button id="cancel-preview" title="プレビューを中止" aria-label="プレビューを中止" disabled><i data-lucide="square"></i></button>
+  <button id="zoom-out" title="縮小" aria-label="縮小"><i data-lucide="zoom-out"></i></button>
+  <button id="zoom-in" title="拡大" aria-label="拡大"><i data-lucide="zoom-in"></i></button>
+  <button id="fit-preview" title="経路と現在の工具位置を全体表示" aria-label="全体表示"><i data-lucide="rotate-ccw"></i></button>
+</header>
+<div id="path-surface"><canvas id="path-canvas" tabindex="0" aria-label="加工予定経路の2Dプレビュー (XY・真上)"></canvas><canvas id="traversed-path" aria-hidden="true" hidden></canvas><span id="tool-marker" role="img" aria-label="工具位置（基板の報告座標）" hidden></span></div>
+<div id="preview-empty"><strong>加工ファイルを選択してください</strong><span>SDカードの一覧でファイルを選ぶと<br>ここに加工予定経路が表示されます</span></div>
+<p id="preview-info" data-state="" role="status"></p>
+<div id="tool-position-readout" title="基板が報告する工具先端の座標です。実測位置ではありません。"><span id="tool-position-state">工具位置: 座標確認待ち</span><span id="tool-position-values"></span></div>
+<footer id="limitations">予定経路 / 衝突判定なし</footer>
+<script>/* PREVIEW_SCRIPT */</script>
+</body>
+</html>

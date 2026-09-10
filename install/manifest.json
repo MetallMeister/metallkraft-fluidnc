@@ -1,0 +1,42 @@
+{
+  "version": "0.1.0",
+  "date": "2026-09-11",
+  "firmware": "FluidNC v4.0.3 (not included)",
+  "webuiBase": "ESP3D-WEBUI v3.0.10",
+  "board": "MKS DLC32 MAX V1.0_002 / ESP32-S3",
+  "configStatus": "Initial setup, uncalibrated; homing/limits/probe/spindle disabled",
+  "files": {
+    "ui/index.html.gz": {
+      "bytes": 113002,
+      "sha256": "2e54337e171d5cd70a551d6e874a01f20f265f3cc80d2c037b9a7ff9a87b44aa"
+    },
+    "ui/theme-metallkraft.gz": {
+      "bytes": 17465,
+      "sha256": "1ac8b49733e5f74af4ffd1e6b650554dc4ab95f1b5a63f5839ef45444a99b5d8"
+    },
+    "ui/lang-ja.json.gz": {
+      "bytes": 8784,
+      "sha256": "79b5c7cf6d727fcb949ade57b93004ac1bd477b6afad1c2a98f4e4e62682beda"
+    },
+    "ui/preferences.json": {
+      "bytes": 1956,
+      "sha256": "36ccf4110ddd61349739d7a1c1ac877db538f7f395730f641d6e41cc8b58e8d1"
+    },
+    "ui/metallkraft-links.html": {
+      "bytes": 1906,
+      "sha256": "4c1c5b8d706705236fc1b12d288f51ae268c4a8e334e882438d8e9f07a004bba"
+    },
+    "ui/metallkraft-news.html": {
+      "bytes": 6016,
+      "sha256": "7163cfcaab97e99752154f8ac575b6a7c5d9ec390759143ccd1d3c2a1f6b85f7"
+    },
+    "ui/metallkraft-preview.html.gz": {
+      "bytes": 25581,
+      "sha256": "70aeeb4c999a0efdf171bf067e01ff681bbf7956be0876fe0457eb61128cf178"
+    },
+    "boards/mks-dlc32-max-v1.0/config.yaml": {
+      "bytes": 2307,
+      "sha256": "1c05016ca220a59477d8d514cd31636fe05e15ab65afbe7cd42940d84dbdc93d"
+    }
+  }
+}

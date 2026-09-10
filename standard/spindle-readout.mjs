@@ -1,0 +1,1 @@
+export const spindleDisplayValueExpression = '"spindle_speed"===i.id&&(Array.isArray(e.spindle_mode)?e.spindle_mode.some((m=>m.value==="M5")):e.spindle_mode?.value==="M5")?"0":Array.isArray(l)?l.map((e=>e.value)).join(" "):l.value';

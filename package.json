@@ -1,0 +1,26 @@
+{
+  "name": "metallkraft-fluidnc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node build-standard.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:ui": "node tests/release-ui.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "lucide": "0.468.0",
+    "playwright": "1.62.1",
+    "ws": "8.21.3"
+  },
+  "dependencies": {
+    "gcode-parser": "2.2.0",
+    "gcode-toolpath": "3.0.0",
+    "three": "0.180.0"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "custom": {
+    "logo": "<span class='metallkraft-wordmark'>MetallKraft</span>",
+    "help": "https://cnc-lab.metallmeister.net/",
+    "information": "https://metallmeister.net/"
+  },
+  "settings": {
+    "theme": "theme-metallkraft",
+    "language": "lang-ja.json",
+    "audio": false,
+    "hapticfeedback": false,
+    "audiofeedback": false,
+    "enableshortcuts": false,
+    "enableautorepeat": false,
+    "fixedpanels": true,
+    "panelsorder": [
+      {"id":"Jog","name":"jog","value":"jog"},
+      {"id":"Files","name":"files"},
+      {"id":"Status","name":"status"},
+      {"id":"Terminal","name":"terminal"},
+      {"id":"Spindle","name":"spindle"},
+      {"id":"Overrrides","name":"overrides"},
+      {"id":"Probe","name":"probe"},
+      {"id":"Laser","name":"laser"},
+      {"id":"Notifications","name":"notification"},
+      {"id":"Macros","name":"macros"},
+      {"id":"Extracontents","name":"extracontents"}
+    ],
+    "openjogonstart": true,
+    "openfilesonstart": true,
+    "openstatusonstart": true,
+    "openterminalonstart": true,
+    "openspindleonstart": true,
+    "openoverridesonstart": true,
+    "openprobeonstart": true,
+    "shownotificationspanel": true,
+    "opennotificationsonstart": true,
+    "showmacrospanel": true,
+    "openmacrosonstart": true,
+    "macros": [],
+    "openlaseronstart": false,
+    "showlaserpanel": false,
+    "jogdistancedefault": "10",
+    "zjogdistancedefault": "10",
+    "xyfeedrate": "500",
+    "zfeedrate": "500",
+    "default_filesystem": "DIRECTSD",
+    "showextracontents": true,
+    "openextrapanelsonstart": true,
+    "extracontents": [
+      {"id":"metallkraft-links","name":"サポート","icon":"ExternalLink","target":"page","source":"metallkraft-links.html","type":"content","refreshtime":"0"},
+      {"id":"metallkraft-news","name":"MetallMeisterからのお知らせ","icon":"Bell","target":"panel","source":"metallkraft-news.html","type":"content","refreshtime":"0"},
+      {"id":"metallkraft-shortcuts","name":"関連サイト","icon":"ExternalLink","target":"panel","source":"metallkraft-links.html","type":"content","refreshtime":"0"},
+      {"id":"metallkraft-preview","name":"加工予定経路","icon":"Box","target":"panel","source":"metallkraft-preview.html","type":"extension","refreshtime":"0"}
+    ]
+  }
+}

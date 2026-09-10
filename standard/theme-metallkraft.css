@@ -1,0 +1,774 @@
+/* Presentation only. WebUI-3 owns every event, command and state value. */
+:root { color-scheme: light; }
+html { font-size: 20px; letter-spacing: 0; }
+body { background: #eceeef; color: #191c20; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; }
+a, a:visited, .text-primary { color: #2458a6 !important; }
+button, .btn, .form-input, .form-select, .panel, .menu, .modal-container, .label, .flatbtn label { border-radius: 0 !important; box-shadow: none !important; }
+.btn, .form-input, .form-select { min-height: 36px; border-color: #899196; color: #20272b; font-size: 16px; }
+.btn:hover { background: #e0e9f8; border-color: #2458a6; }
+.btn-primary, .btn.active, .flatbtn input:checked + label { background: #2458a6 !important; color: #fff !important; border-color: #2458a6 !important; }
+.btn:disabled, .btn.disabled { opacity: .45; }
+.btn:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible { outline: 3px solid #2458a6; outline-offset: 2px; }
+.text-error { color: #b32d2d !important; }
+.text-success { color: #246743 !important; }
+.text-warning, .warning { color: #795409 !important; }
+header.navbar { height: 50px; min-height: 50px; flex-shrink: 0; background: #e0e3e6; border-bottom: 2px solid #2458a6; padding: 4px 10px; }
+header.navbar a, header.navbar .btn { color: #191c20 !important; }
+header.navbar .active { background: #2458a6; color: #fff !important; }
+header.navbar .navbar-brand { padding-right: 16px; }
+header.navbar .navbar-brand .esp3dlogo { display: none; }
+header.navbar .navbar-brand::after, .metallkraft-wordmark { font-size: 24px; font-weight: 750; color: #191c20; white-space: nowrap; }
+header.navbar .navbar-brand::after { content: "MetallKraft"; }
+header.navbar .btn label { font-weight: 650; }
+
+/* One page scroll surface. Never clip native controls to make a panel fit. */
+html:has(#dashboard), body:has(#dashboard) { height: auto; min-height: 100dvh; overflow: visible; }
+body:has(#dashboard) #app { height: auto; min-height: 100dvh; }
+body:has(#dashboard) .footer-container:empty { display: none; }
+.main-page-container:has(#dashboard) { height: auto; overflow: visible; flex: 1; }
+#dashboard { padding: 8px; }
+#dashboard .panels-container { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 16px; margin: 0 !important; padding: 0; }
+#dashboard .panel-dashboard { background: transparent; border: 0; border-top: 1px solid #a6adb3; width: auto !important; max-width: none; height: auto !important; min-height: 0 !important; max-height: none !important; overflow: visible !important; margin: 0 !important; }
+#dashboard .panel-body-dashboard { height: auto !important; min-height: 0 !important; max-height: none !important; overflow: visible !important; padding: 6px 0; }
+#dashboard .panel-dashboard > .navbar { height: 32px; min-height: 32px; background: transparent; color: #20272b; padding: 0; }
+#dashboard .panel-dashboard > .navbar strong { font-size: 18px; font-weight: 750; }
+#dashboard .panel-dashboard > .navbar .navbar-section { background: transparent; color: #20272b; }
+#dashboard .panel-dashboard > .navbar .btn-close,
+#dashboard .panel-dashboard > .navbar button:not(.dropdown-toggle) { display: none; }
+#dashboard .panel-dashboard > .navbar .dropdown-toggle { min-height: 28px; height: 28px; font-size: 13px; }
+#dashboard .files-list, #dashboard .terminal { overflow: visible !important; max-height: none !important; height: auto !important; min-height: 0 !important; }
+#filesPanel .files-list { background: #fff; flex: 1 0 auto; margin: 0 !important; }
+#filesPanel .input-group { margin: 4px 0 8px !important; }
+#filesPanel .filename { overflow-wrap: anywhere; }
+#filesPanel .files-list-footer { padding: 6px 0 !important; font-size: 13px; }
+#terminalPanel .terminal { background: #fff; font-size: 13px; }
+#dashboard > .buttons-bar { display: flex; align-items: center; gap: 8px; margin: 0 0 8px !important; padding: 0; }
+.quick-buttons-bar { margin-left: auto !important; }
+#btnEStop { background: #b83232 !important; border: 2px solid #942727 !important; color: #fff !important; min-height: 58px; min-width: 230px; height: auto; margin: 0 !important; padding: 8px 16px; font-size: 23px; font-weight: 750; }
+#btnEStop svg, #btnEStop .text-error { color: #fff !important; width: 28px; height: 28px; }
+#btnEStop .hide-low { display: inline !important; }
+#btnEStop::after { display: none; }
+.panel-dashboard .extra-control-header { background: #dfe4e9; color: #20272b; font-size: 12px; font-weight: 650; }
+.panel-dashboard .extra-control-value { background: #fff; color: #20272b; font-size: 18px; padding: 0 6px; font-variant-numeric: tabular-nums; }
+.panel-dashboard .text-tiny { font-size: 13px; }
+.modal { z-index: 2000; }
+.modal-container { border: 2px solid #626c72; }
+.modal-title { color: #20272b; font-weight: 700; }
+.modal-body { font-size: 16px; }
+.modal-footer .btn { min-height: 42px; }
+
+/* Keep the original coordinate nodes, including clickable work coordinates. */
+#jogPanel .jog-container { display: grid; grid-template-columns: minmax(0,1fr); height: auto; justify-content: flex-start; gap: 8px; margin: 0 !important; padding: 0; }
+#jogPanel .jog-container > .m-1:not(.jog-positions-ctrls) { grid-area: 2 / 1; width: 100%; margin: 0 !important; }
+#jogPanel .jog-positions-ctrls { flex-direction: column; gap: 4px; margin: 0 !important; width: 100%; }
+#jogPanel .jog-position-ctrl { display: grid; grid-template-columns: 30px 40px minmax(0,1fr); align-items: center; margin: 0; min-width: 0; padding: 4px 8px; background: #245198; border: 1px solid #16386e; border-radius: 0; }
+#jogPanel .jog-positions-ctrls:first-child .jog-position-ctrl:nth-child(1)::before { content: "X"; }
+#jogPanel .jog-positions-ctrls:first-child .jog-position-ctrl:nth-child(2)::before { content: "Y"; }
+#jogPanel .jog-positions-ctrls:first-child .jog-position-ctrl:nth-child(3)::before { content: "Z"; }
+#jogPanel .jog-position-ctrl::before { grid-area: 1 / 1 / 3 / 2; font-size: 26px; font-weight: 750; color: #fff; }
+#jogPanel .jog-position-sub-header { background: transparent; color: #dae5f6; border: 0; font-size: 0; }
+#jogPanel .jog-position-sub-header::before { font-size: 12px; }
+#jogPanel .jog-position-sub-header:first-child { grid-area: 2 / 2 / 3 / 3; }
+#jogPanel .jog-position-sub-header:first-child::before { content: "機械"; }
+#jogPanel .jog-position-sub-header:nth-child(3) { grid-area: 1 / 2 / 2 / 3; }
+#jogPanel .jog-position-sub-header:nth-child(3)::before { content: "作業"; }
+#jogPanel .jog-position-value { justify-content: flex-end; background: transparent; color: #fff; padding: 0; margin: 0 !important; line-height: 1.15; font-variant-numeric: tabular-nums; font-weight: 750; }
+#jogPanel .jog-position-value:nth-child(2) { grid-area: 2 / 3 / 3 / 4; font-size: 16px; color: #dae5f6; }
+#jogPanel .jog-position-value:nth-child(4) { grid-area: 1 / 3 / 2 / 4; font-size: 28px; }
+
+/* Both native button containers share tracks; only their buttons receive clicks. */
+#jogPanel { --jog-rows: repeat(3,minmax(48px,1fr)) 36px 36px 24px 48px 8px 24px 48px 64px; }
+#jogPanel .jog-buttons-main-container { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); grid-template-rows: var(--jog-rows); gap: 5px; width: 100%; height: 100%; }
+#jogPanel .jog-axis-group, #jogPanel .jog-axis-group > .jog-buttons-container { display: contents; }
+#jogPanel .jog-buttons-container .btn { width: auto; min-width: 0; min-height: 0; height: 100%; margin: 0 !important; padding: 2px; font-size: 0; line-height: 1.2; }
+#jogPanel .jog-buttons-container .btn > svg, #jogPanel .jog-buttons-container .btn > span { display: none; }
+#jogPanel .jog-buttons-container .btn::before { display: block; font-size: 18px; font-weight: 700; white-space: pre-line; pointer-events: none; }
+#jogPanel [id="btn+Y"] { grid-area: 1 / 4 / 2 / 7; }
+#jogPanel [id="btn-X"] { grid-area: 2 / 1 / 3 / 4; }
+#jogPanel [id="btn+X"] { grid-area: 2 / 7 / 3 / 10; }
+#jogPanel [id="btn-Y"] { grid-area: 3 / 4 / 4 / 7; }
+#jogPanel [id="btn+Z"] { grid-area: 1 / 10 / 2 / 13; }
+#jogPanel [id="btn-Z"] { grid-area: 3 / 10 / 4 / 13; }
+#jogPanel [id="btn+Y"]::before { content: "Y+"; }
+#jogPanel [id="btn-X"]::before { content: "X−"; }
+#jogPanel [id="btn+X"]::before { content: "X+"; }
+#jogPanel [id="btn-Y"]::before { content: "Y−"; }
+#jogPanel [id="btn+Z"]::before { content: "Z+"; }
+#jogPanel [id="btn-Z"]::before { content: "Z−"; }
+#jogPanel .jog-buttons-main-container::before { content: "XY"; grid-area: 2 / 4 / 3 / 7; }
+#jogPanel .jog-buttons-main-container::after { content: "Z"; grid-area: 2 / 10 / 3 / 13; }
+#jogPanel .jog-buttons-main-container::before, #jogPanel .jog-buttons-main-container::after { display: grid; place-items: center; font-size: 18px; font-weight: 700; color: #5b666d; pointer-events: none; }
+#jogPanel .jog-buttons-container [id^="btn+"], #jogPanel .jog-buttons-container [id^="btn-"] { background: #2458a6; border-color: #193f79; color: #fff; }
+#jogPanel .jog-buttons-container .btn:hover { background: #d9e5f9; color: #16386e; }
+#jogPanel .jog-distance-selector-container { grid-column: 1 / 13; display: grid; grid-template-columns: 64px minmax(40px,1.4fr) minmax(32px,1.1fr) repeat(3,minmax(24px,1fr)); align-items: stretch; padding: 0; margin: 0 !important; }
+#jogPanel .jog-distance-selector-container:has(#move_xy_1) { grid-row: 4; }
+#jogPanel .jog-distance-selector-container:has(#move_z_1) { grid-row: 5; }
+#jogPanel .jog-distance-selector-header { font-size: 0; text-align: left; padding: 2px; }
+#jogPanel .jog-distance-selector-header::before { display: block; font-size: 11px; line-height: 1.3; font-weight: 650; white-space: pre-line; }
+#jogPanel .jog-distance-selector-container:has(#move_xy_1) .jog-distance-selector-header::before { content: "XY 移動量\a(mm / 回)"; }
+#jogPanel .jog-distance-selector-container:has(#move_z_1) .jog-distance-selector-header::before { content: "Z 移動量\a(mm / 回)"; }
+#jogPanel .jog-distance-selector-container .flatbtn { width: 100%; }
+#jogPanel .jog-distance-selector-container label { display: grid; place-items: center; width: 100%; min-width: 0; height: 36px; padding: 2px; font-size: 16px; font-weight: 700; color: #1d4586; border-color: #7185a4; }
+#jogPanel .flatbtn:has(input[value="0.1"]) { order: 1; }
+#jogPanel .flatbtn:has(input[value="1"]) { order: 2; }
+#jogPanel .flatbtn:has(input[value="10"]) { order: 3; }
+#jogPanel .flatbtn:has(input[value="25"]), #jogPanel .flatbtn:has(input[value="50"]) { order: 4; }
+#jogPanel .flatbtn:has(input[value="100"]), #jogPanel .jog-distance-selector-container:has(#move_z_1) .flatbtn:has(input[value="50"]) { order: 5; }
+#jogPanel .jog-axis-group::before { grid-column: 1 / 13; padding: 3px 6px; font-size: 13px; font-weight: 700; line-height: 18px; }
+#jogPanel .jog-axis-group:first-child::before { content: "作業原点を設定"; grid-row: 6; background: #bdd2e6; color: #142d47; }
+#jogPanel .jog-axis-group:nth-child(2)::before { content: "機械原点へ復帰（移動）"; grid-row: 9; background: #ebca7a; color: #3b2c09; }
+#jogPanel #btnZX { grid-area: 7 / 1 / 8 / 4; }
+#jogPanel #btnZY { grid-area: 7 / 4 / 8 / 7; }
+#jogPanel #btnZZ { grid-area: 7 / 7 / 8 / 10; }
+#jogPanel #btnHX { grid-area: 10 / 1 / 11 / 4; }
+#jogPanel #btnHY { grid-area: 10 / 4 / 11 / 7; }
+#jogPanel #btnHZ { grid-area: 10 / 7 / 11 / 10; }
+#jogPanel #btnZX::before { content: "X\a設定"; }
+#jogPanel #btnZY::before { content: "Y\a設定"; }
+#jogPanel #btnZZ::before { content: "Z\a設定"; }
+#jogPanel #btnHX::before { content: "X\a復帰"; }
+#jogPanel #btnHY::before { content: "Y\a復帰"; }
+#jogPanel #btnHZ::before { content: "Z\a復帰"; }
+#jogPanel .jog-buttons-container [id^="btnH"]::before, #jogPanel .jog-buttons-container [id^="btnZ"]::before { font-size: 13px; font-weight: 600; }
+#jogPanel .jog-extra-buttons-container { grid-area: 2 / 1; display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); grid-template-rows: var(--jog-rows); gap: 5px; padding: 0; width: 100%; pointer-events: none; }
+#jogPanel .jog-extra-buttons-container button { pointer-events: auto; min-width: 0; margin: 0 !important; height: 100%; min-height: 0; padding: 2px; font-size: 0; }
+#jogPanel .jog-extra-buttons-container button svg, #jogPanel .jog-extra-buttons-container button .text-like-icon { display: none; }
+#jogPanel .jog-extra-buttons-container button::before { content: attr(data-tooltip); display: block; font-size: 13px; white-space: normal; }
+#jogPanel #btnStop { color: #9a2e2e; border-color: #9a2e2e; }
+#jogPanel #btnStop .insensitive { display: none; }
+#jogPanel #btnStop::before { content: "ジョグ停止"; font-size: 16px; font-weight: 700; }
+#jogPanel #btnHAll { grid-area: 10 / 10 / 11 / 13; }
+#jogPanel #btnZAll { grid-area: 7 / 10 / 8 / 13; }
+#jogPanel #btnStop { grid-area: 11 / 1 / 12 / 13; }
+#jogPanel #btnHAll::before { content: "全軸\a復帰"; white-space: pre-line; font-size: 13px; font-weight: 700; line-height: 1.25; }
+#jogPanel #btnZAll::before { content: "全軸\a設定"; white-space: pre-line; font-size: 13px; font-weight: 700; line-height: 1.25; }
+#jogPanel .dropdown-toggle::before { content: "移動速度"; font-size: 13px; margin-right: 4px; }
+
+/* Command names stay visible; detailed mode legends use native tooltips. */
+#statusPanel .panel-body-dashboard { display: flex; flex-direction: column; gap: 6px; }
+#statusPanel .status-ctrls { order: 0; align-items: center; justify-content: flex-start; }
+#statusPanel .status-ctrls::before { content: "機械の状態"; font-size: 14px; font-weight: 650; margin-right: 10px; }
+#statusPanel .status-ctrls .extra-control { border: 0; margin: 0 !important; }
+#statusPanel .big-text { font-size: 20px !important; padding: 8px 12px; background: #dfe5e9; color: #191c20; }
+#statusPanel fieldset, #SpindlePanel fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+#statusPanel .field-group-content, #SpindlePanel .field-group-content { margin: 0; padding: 0; max-width: none; }
+#statusPanel fieldset:has(.status-buttons-container) { order: 1; }
+#statusPanel fieldset:has(.states-buttons-container) { order: 2; }
+#statusPanel legend, #SpindlePanel legend { min-height: 0; height: auto; line-height: 1.2; margin: 0 0 6px; padding: 0; }
+#statusPanel legend label, #SpindlePanel legend label { margin: 0 !important; }
+#statusPanel .status-buttons-container { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; padding: 0; }
+#statusPanel .status-buttons-container .btn { display: flex; align-items: center; justify-content: center; gap: 5px; width: auto; margin: 0; height: auto; min-height: 48px; padding: 6px; white-space: normal; }
+#statusPanel .status-buttons-container .btn::before { content: attr(data-tooltip); font-size: 16px; font-weight: 650; }
+#statusPanel .status-buttons-container svg { width: 18px; height: 18px; }
+#statusPanel .status-buttons-container [data-tooltip="一時停止"] { color: #765308; background: #fff5d8; border-color: #a98028; order: -2; }
+#statusPanel .status-buttons-container [data-tooltip="再開"] { color: #215d36; background: #edf6ef; border-color: #417951; order: -2; }
+#statusPanel .status-buttons-container [data-tooltip="リセット"] { color: #9a2e2e; order: -1; }
+#statusPanel .states-buttons-container { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 4px; width: 100%; padding: 0; }
+#statusPanel .states-buttons-container .btn { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 0 !important; width: 100%; height: 36px; min-height: 36px; padding: 4px 8px; white-space: normal; font-size: 18px; font-weight: 700; background: #e0e4e8; cursor: default; border-color: #b2bac3; }
+#statusPanel .states-buttons-container .btn::before { content: attr(data-tooltip); text-align: left; font-size: 12px; font-weight: 500; color: #354149; }
+#statusPanel [data-tooltip^="移動方式"]::before { content: "移動方式" !important; }
+#statusPanel [data-tooltip^="作業原点"]::before { content: "作業原点" !important; }
+#statusPanel [data-tooltip^="円弧の平面"]::before { content: "円弧の平面" !important; }
+#statusPanel [data-tooltip^="距離指定"]::before { content: "距離指定" !important; }
+#statusPanel [data-tooltip^="送りの指定"]::before { content: "送り指定" !important; }
+#statusPanel [data-tooltip^="長さの単位"]::before { content: "長さの単位" !important; }
+#statusPanel [data-tooltip^="主軸指令"]::before { content: "主軸指令" !important; }
+#statusPanel [data-tooltip^="冷却指令"]::before { content: "冷却指令" !important; }
+#statusPanel .states-buttons-container .btn::after { white-space: pre-line; }
+#SpindlePanel .panel-body-dashboard { gap: 12px; }
+#SpindlePanel .states-buttons-container { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; width: 100%; padding: 0; }
+#SpindlePanel .states-buttons-container .btn { width: auto; margin: 0; height: auto; min-height: 38px; white-space: normal; font-size: 16px; padding: 5px; }
+#SpindlePanel .states-buttons-container .btn label { white-space: normal; max-width: none !important; }
+#SpindlePanel legend { white-space: normal; }
+#SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) legend label, #SpindlePanel fieldset:has([data-tooltip="冷却液を開始"]) legend label { font-size: 0; }
+#SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) legend label::before { content: "主軸操作"; font-size: 15px; }
+#SpindlePanel fieldset:has([data-tooltip="冷却液を開始"]) legend label::before { content: "冷却操作"; font-size: 15px; }
+#SpindlePanel .states-buttons-container button:has(svg)::before { content: attr(data-tooltip); display: block; font-size: 13px; }
+#SpindlePanel .states-buttons-container button:has(svg) svg { display: none; }
+#SpindlePanel .form-group { margin: 6px 0 0; }
+#SpindlePanel .form-group label { font-size: 13px; }
+#SpindlePanel .columns { margin-left: 0; margin-right: 0; }
+#jogPanel .tooltip::after { max-width: 230px; white-space: normal; }
+#jogPanel [id="btn-X"]::after, #jogPanel #btnHX::after, #jogPanel #btnZX::after, #jogPanel #btnHAll::after { left: 0; transform: translateY(0); }
+#jogPanel [id="btn+Z"]::after, #jogPanel [id="btn-Z"]::after, #jogPanel #btnHZ::after, #jogPanel #btnZZ::after { left: auto; right: 0; transform: translateY(0); }
+/* Sideways native tooltips otherwise extend beyond the right-hand column. */
+#SpindlePanel .tooltip::after { left: 50%; right: auto; bottom: 100%; top: auto; transform: translate(-50%,8px); }
+#SpindlePanel .tooltip:hover::after, #SpindlePanel .tooltip:focus::after { transform: translate(-50%,0); }
+
+/* Neutral control panel. Color is reserved for stopping and recovery. */
+body, #dashboard { background: #d7d7d7; color: #151515; }
+a, a:visited, .text-primary { color: #242424 !important; }
+header.navbar { background: #c8c8c8; border-bottom-color: #777; }
+header.navbar .active, .btn-primary, .btn.active, .flatbtn input:checked + label { background: #393939 !important; color: #fff !important; border-color: #222 !important; }
+.btn, .form-input, .form-select { background: #f8f8f8; border-color: #858585; color: #191919; }
+.btn:hover { background: #fff; border-color: #222; }
+.btn:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline-color: #222; }
+#jogPanel .jog-position-ctrl { background: #f5f5f5; border-color: #888; }
+#jogPanel .jog-position-ctrl::before, #jogPanel .jog-position-value { color: #111; }
+#jogPanel .jog-position-sub-header, #jogPanel .jog-position-value:nth-child(2) { color: #505050; }
+#jogPanel .jog-buttons-container [id^="btn+"], #jogPanel .jog-buttons-container [id^="btn-"] { background: #f4f4f4; border-color: #777; color: #111; }
+#jogPanel .jog-buttons-container .btn:hover { background: #fff; color: #111; }
+#jogPanel .jog-distance-selector-container label { color: #222; border-color: #888; }
+#jogPanel .jog-distance-selector-header { color: #222; background: transparent; }
+#dashboard .btn.btn-primary, #dashboard .btn.dropdown-toggle { background: #f4f4f4; color: #222; border-color: #858585; }
+#dashboard .text-info, #statusPanel legend label { color: #444 !important; }
+#dashboard progress { accent-color: #666; }
+#statusPanel .big-text, #statusPanel .states-buttons-container .btn { background: #e4e4e4; color: #222; border-color: #999; }
+.panel-dashboard .extra-control-header { background: #c8c8c8; color: #333; }
+#SpindlePanel .panel-body-dashboard { gap: 6px; }
+#SpindlePanel .states-buttons-container { gap: 4px; }
+#SpindlePanel .states-buttons-container .btn { min-height: 32px; font-size: 14px; padding: 3px; }
+#SpindlePanel legend { margin-bottom: 4px; }
+#SpindlePanel legend label::before, #SpindlePanel legend label { color: #333; }
+#SpindlePanel fieldset:last-child legend { display: none; }
+#SpindlePanel fieldset:last-child .states-buttons-container { grid-template-columns: repeat(auto-fit,minmax(60px,1fr)); }
+#SpindlePanel fieldset:last-child .states-buttons-container button::before { font-size: 11px; line-height: 16px; }
+#SpindlePanel .extra-control-value { font-size: 16px; }
+#SpindlePanel .extra-control { min-width: 0; flex: 1 1 0; width: auto; }
+#SpindlePanel .extra-control-header { font-size: 10px; white-space: nowrap; }
+#SpindlePanel .form-group .columns { flex-wrap: nowrap; }
+#SpindlePanel .form-group .form-label { font-size: 12px; padding: 0; line-height: 18px; align-self: center; flex: 0 0 96px; width: 96px; }
+#SpindlePanel .form-group .input-group { min-width: 0; flex: 1 1 0; width: auto; }
+#SpindlePanel .form-input { min-width: 0; }
+#SpindlePanel .states-buttons-container button[data-tooltip="主軸状態切替"]::before { content: "主軸切替"; }
+#SpindlePanel .states-buttons-container button[data-tooltip="フラッド状態切替"]::before { content: "液切替"; }
+#SpindlePanel .states-buttons-container button[data-tooltip="ミスト状態切替"]::before { content: "ミスト切替"; }
+#dashboard #metallkraft-preview { min-height: 300px !important; }
+#dashboard #target_metallkraft-preview { flex: 1; min-height: 240px !important; }
+#extra_content_metallkraft-preview .image-button-bar { display: none; }
+#extra_content_metallkraft-preview { background: #080808; z-index: 10; }
+#extra_content_metallkraft-preview iframe { padding: 0; }
+#terminalPanel .input-group { margin: 4px 0 !important; }
+#terminalPanel .terminal { flex: 1 1 0; min-height: 0 !important; overflow: hidden !important; background: #f8f8f8; border: 1px solid #999; padding: 4px; margin: 0 !important; }
+#terminalPanel .terminal pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.4 monospace; margin: 0; }
+#dashboard #terminalPanel { height: 280px !important; }
+#terminalPanel > .navbar button:not(.dropdown-toggle) { display: inline-flex; }
+#terminalPanel .terminal .echo, #terminalPanel .terminal .info { color: #333; }
+#terminalPanel:fullscreen { padding: 10px; background: #d7d7d7; height: 100dvh !important; }
+#terminalPanel:fullscreen .terminal { overflow: auto !important; }
+
+/* Classic control-panel finish: native controls with a simplified presentation. */
+:root {
+  --mk-face: #d4d4cf;
+  --mk-raised: inset 1px 1px #fff, inset -1px -1px #474747, inset 2px 2px #eeece6, inset -2px -2px #a09e98;
+  --mk-sunken: inset 1px 1px #474747, inset -1px -1px #fff, inset 2px 2px #90918c, inset -2px -2px #e9e8e2;
+}
+body, #dashboard, #terminalPanel:fullscreen, #dashboard > .buttons-bar { background: #c4c4bf; }
+header.navbar { background: var(--mk-face); border-bottom-color: #4c4c4c; box-shadow: inset 0 1px #fff, inset 0 -1px #f3f1ea; }
+.btn, .flatbtn label, #jogPanel .jog-buttons-container .btn,
+#dashboard .btn.btn-primary, #dashboard .btn.dropdown-toggle {
+  background: var(--mk-face) !important; color: #151515 !important;
+  border-color: #fbfaf5 #474747 #474747 #fbfaf5 !important;
+  box-shadow: var(--mk-raised) !important;
+}
+.btn:hover, #jogPanel .jog-buttons-container .btn:hover {
+  background: #e9e9e3 !important;
+}
+header.navbar .active, #dashboard .btn.btn-primary, #dashboard .btn.active,
+.btn.active, .flatbtn input:checked + label,
+#jogPanel .jog-buttons-container .btn:active, .btn:active {
+  background: #000098 !important; color: #fff !important;
+  border-color: #474747 #f8f7f1 #f8f7f1 #474747 !important;
+  box-shadow: var(--mk-sunken) !important;
+}
+.form-input, .form-select, .modal-container, #filesPanel .files-list,
+#terminalPanel .terminal { box-shadow: var(--mk-sunken) !important; }
+.form-input, .form-select, .modal-container { background: #f7f7f2; color: #111; border-color: #666 #fff #fff #666; }
+#dashboard .panel-dashboard > .navbar,
+#dashboard .panel-dashboard > .navbar .navbar-section {
+  background: #000080; color: #fff;
+  box-shadow: inset 0 1px #a5a5cd, inset 0 -1px #373747;
+}
+#jogPanel .jog-position-ctrl {
+  background: #000098;
+  border-color: #555 #fbfaf5 #fbfaf5 #555; box-shadow: var(--mk-sunken);
+}
+#jogPanel .jog-position-value, #jogPanel .jog-position-ctrl::before { color: #fff; }
+#jogPanel .jog-position-sub-header, #jogPanel .jog-position-value:nth-child(2) { color: #dedfff; }
+#jogPanel .jog-distance-selector-header { border-color: #777; background: #c5c3bd; color: #202020; }
+#filesPanel .files-list { background: #fff; }
+#terminalPanel .terminal { background: #fff; color: #171717; border-color: #555 #fff #fff #555; }
+#terminalPanel .terminal .echo, #terminalPanel .terminal .info { color: #242424; }
+#terminalPanel .terminal .text-error { color: #a42020 !important; }
+#terminalPanel .terminal .text-warning { color: #775400 !important; }
+#statusPanel .big-text, .panel-dashboard .extra-control-value {
+  background: #000098; color: #fff;
+  box-shadow: var(--mk-sunken);
+}
+.panel-dashboard .extra-control-header { background: #c4c4bf; color: #191919; }
+#statusPanel .status-buttons-container [data-tooltip="一時停止"] {
+  background: #ffed62 !important; color: #282100 !important;
+}
+#statusPanel .status-buttons-container [data-tooltip="再開"] {
+  background: #67d346 !important; color: #102907 !important;
+}
+#statusPanel .status-buttons-container [data-tooltip="リセット"], #jogPanel #btnStop { color: #8c2020 !important; }
+#btnEStop, #btnEStop:hover {
+  background: #ba2722 !important; color: #fff !important;
+  border-color: #f7aaa3 #531513 #531513 #f7aaa3 !important;
+  box-shadow: inset 1px 1px #ffcec5, inset -1px -1px #491311, inset 2px 2px #dd7770, inset -2px -2px #79201b !important;
+}
+#btnEStop:active { box-shadow: var(--mk-sunken) !important; }
+#dashboard .text-primary, #dashboard .text-info { color: #292a37 !important; }
+#jogPanel .jog-buttons-container [id^="btnZ"], #jogPanel #btnZAll { background: #d5e4f1 !important; color: #142d47 !important; }
+#jogPanel .jog-buttons-container [id^="btnH"], #jogPanel #btnHAll { background: #f4dfa6 !important; color: #3b2c09 !important; }
+#jogPanel #btnZAll, #jogPanel #btnHAll { border-left: 4px solid #555 !important; }
+#jogPanel .jog-buttons-container [id^="btnZ"]:active, #jogPanel #btnZAll:active { background: #294f74 !important; color: #fff !important; }
+#jogPanel .jog-buttons-container [id^="btnH"]:active, #jogPanel #btnHAll:active { background: #795916 !important; color: #fff !important; }
+
+/* Clip the native hit area as well as the paint, leaving corners non-interactive. */
+#jogPanel .jog-buttons-container [id^="btn+"], #jogPanel .jog-buttons-container [id^="btn-"] {
+  position: relative; justify-self: stretch; align-self: center; width: 100%; height: min(100%,90px);
+  background: #565651 !important; border: 0 !important; box-shadow: none !important;
+}
+#jogPanel .jog-buttons-container [id^="btn+"]::before, #jogPanel .jog-buttons-container [id^="btn-"]::before {
+  position: absolute; inset: 3px; display: flex; align-items: center; justify-content: center;
+  clip-path: inherit; background: #f3f3ed; color: #171717; font-size: 16px;
+}
+#jogPanel .jog-buttons-container [id^="btn+"]:hover::before, #jogPanel .jog-buttons-container [id^="btn-"]:hover::before { background: #fff; }
+#jogPanel .jog-buttons-container [id^="btn+"]:active::before, #jogPanel .jog-buttons-container [id^="btn-"]:active::before { background: #5b5b55; color: #fff; }
+#jogPanel .jog-buttons-container [id^="btn+"]:focus-visible::before, #jogPanel .jog-buttons-container [id^="btn-"]:focus-visible::before { background: #bdd2e6; }
+#jogPanel [id="btn+Y"], #jogPanel [id="btn+Z"] { clip-path: polygon(50% 0,100% 100%,0 100%); }
+#jogPanel [id="btn-Y"], #jogPanel [id="btn-Z"] { clip-path: polygon(0 0,100% 0,50% 100%); }
+#jogPanel [id="btn-X"] { clip-path: polygon(0 50%,100% 0,100% 100%); }
+#jogPanel [id="btn+X"] { clip-path: polygon(0 0,100% 50%,0 100%); }
+#jogPanel [id="btn+Y"]::before, #jogPanel [id="btn+Z"]::before { padding-top: 22px; }
+#jogPanel [id="btn-Y"]::before, #jogPanel [id="btn-Z"]::before { padding-bottom: 22px; }
+#jogPanel [id="btn-X"]::before { padding-left: 16px; }
+#jogPanel [id="btn+X"]::before { padding-right: 16px; }
+#dashboard #SpindlePanel button:is([data-tooltip="主軸を正転"],[data-tooltip="主軸を停止"]) { background: #fff !important; color: #111 !important; transition: none !important; }
+#dashboard #SpindlePanel button:is([data-tooltip="主軸を正転"],[data-tooltip="主軸を停止"]).btn-primary { background: #000098 !important; color: #fff !important; }
+#SpindlePanel [data-tooltip="主軸を逆転"],
+#SpindlePanel [data-tooltip="工具交換"],
+#SpindlePanel fieldset:has([data-tooltip="冷却液を開始"]),
+#SpindlePanel fieldset:last-child,
+#SpindlePanel .status-ctrls .extra-control:nth-child(n+3),
+#statusPanel fieldset:has(.states-buttons-container) { display: none !important; }
+#jogPanel .flatbtn:has(input[value="0.01"]) { order: 0; }
+
+/* Units remain visible; spindle mode changes only the rendered numeric value. */
+#SpindlePanel .status-ctrls { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 4px; }
+#SpindlePanel .extra-control-header { display: flex; align-items: center; justify-content: center; min-height: 40px; padding: 2px 4px; font-size: 12px; line-height: 16px; white-space: normal; }
+#SpindlePanel .extra-control-value { font-size: 18px; }
+
+/* Stop viewport rubber-banding without clipping long lists or small screens. */
+html:has(#dashboard), body:has(#dashboard), #app:has(#dashboard),
+.main-page-container:has(#dashboard), #dashboard { overscroll-behavior: none; }
+
+/* Static links use the standard extra-content panel, without event handlers. */
+#menu.menu-container { z-index: auto; }
+#menu .dropdown { z-index: 11000; }
+#dashboard #metallkraft-shortcuts { border: 0; height: 44px !important; min-height: 44px !important; grid-column: 1 / -1; }
+#dashboard #metallkraft-shortcuts > .navbar { display: none; }
+#dashboard #target_metallkraft-shortcuts { height: 44px !important; min-height: 44px !important; padding: 0; }
+#extra_content_metallkraft-shortcuts { z-index: 402; background: #c4c4bf; }
+#extra_content_metallkraft-shortcuts iframe { display: block; padding: 0; }
+#extra_content_metallkraft-shortcuts .image-button-bar,
+#extra_content_metallkraft-news .image-button-bar { display: none; }
+#dashboard #metallkraft-news { grid-column: 1 / -1; height: 172px !important; min-height: 0 !important; }
+#dashboard #target_metallkraft-news { flex: 1; padding: 0; min-height: 0 !important; }
+#extra_content_metallkraft-news { background: #d4d4cf; z-index: 10; }
+#extra_content_metallkraft-news iframe { display: block; padding: 0; }
+@media (min-width: 900px) and (min-height: 768px) {
+  #dashboard #metallkraft-shortcuts {
+    position: fixed;
+    top: 4px;
+    right: 52px;
+    z-index: auto;
+    pointer-events: none;
+    width: 330px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+  }
+  #dashboard #target_metallkraft-shortcuts { height: 42px !important; min-height: 42px !important; }
+}
+@media (max-width: 899px), (max-height: 767px) {
+  #dashboard #metallkraft-preview { order: -3; }
+  #dashboard #metallkraft-shortcuts { order: -2; }
+}
+
+/* Original nodes remain wired to WebUI-3. The preview is a native extra panel. */
+@media (min-width: 900px) and (min-height: 768px) {
+  #dashboard { display: grid; grid-template-columns: minmax(0,1.5fr) repeat(3,minmax(215px,1fr)); grid-template-rows: minmax(44px,max-content) minmax(214px,max-content) 28px minmax(122px,1fr) 72px 64px; gap: 8px; min-height: calc(100dvh - 50px); }
+  #dashboard > .buttons-bar, #dashboard .panels-container, #dashboard #statusPanel, #dashboard #statusPanel .panel-body-dashboard,
+  #dashboard #jogPanel, #dashboard #jogPanel .jog-container, #dashboard #SpindlePanel { display: contents; }
+  #dashboard > .buttons-bar > .dropdown { grid-area: 1 / 1 / 2 / 2; width: 40px; align-self: center; z-index: 1002; }
+  #dashboard > .buttons-bar > .dropdown > button { margin: 0 !important; }
+  #dashboard #statusPanel > .navbar { display: none; }
+  #statusPanel .status-ctrls { grid-area: 1 / 1 / 2 / 2; margin-left: 50px; }
+  #statusPanel .status-ctrls:has(.extra-control-value)::before { display: none; }
+  #statusPanel .status-ctrls .extra-control { min-width: 0; max-width: 100%; }
+  #statusPanel .status-ctrls:has(.extra-control-value) .big-text { font-size: 16px !important; line-height: 20px; padding: 2px 4px; }
+  #statusPanel .status-ctrls .extra-control-value { font-size: 12px; line-height: 16px; padding: 1px 3px; white-space: normal; overflow-wrap: anywhere; }
+  #statusPanel fieldset:has(.status-buttons-container) { grid-area: 1 / 2 / 2 / 5; align-self: center; }
+  #statusPanel fieldset:has(.status-buttons-container) legend { display: none; }
+  #statusPanel .status-buttons-container { grid-template-columns: repeat(4,minmax(0,1fr)); }
+  #statusPanel fieldset:has(.states-buttons-container) { grid-area: 5 / 1 / 6 / 3; align-self: center; }
+  #statusPanel fieldset:has(.states-buttons-container) legend { display: none; }
+  #statusPanel .states-buttons-container { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 3px; }
+  #statusPanel .states-buttons-container .btn { height: 30px; min-height: 30px; font-size: 14px; padding: 3px; }
+  #statusPanel .states-buttons-container .btn::before { font-size: 10px; }
+  #statusPanel .status-buttons-container .btn { min-height: 42px; }
+  #jogPanel .jog-positions-ctrls { grid-area: 2 / 4 / 4 / 5; display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: repeat(3,minmax(0,1fr)); gap: 5px; }
+  #jogPanel .jog-position-ctrl { padding: 3px 10px; }
+  #jogPanel > .navbar { grid-area: 2 / 3 / 3 / 4; align-self: start; border-top: 1px solid #999; }
+  #jogPanel .jog-container > .m-1:not(.jog-positions-ctrls) { grid-area: 2 / 3 / 7 / 4; margin-top: 36px !important; min-height: 0; }
+  #jogPanel .jog-extra-buttons-container { grid-area: 2 / 3 / 7 / 4; margin-top: 36px; }
+  #SpindlePanel > .navbar { grid-area: 2 / 2 / 3 / 3; align-self: start; border-top: 1px solid #999; }
+  #SpindlePanel .panel-body-dashboard { grid-area: 2 / 2 / 3 / 3; margin-top: 32px; padding: 0; align-self: start; }
+  #filesPanel { grid-area: 3 / 2 / 7 / 3; align-self: stretch; }
+  #dashboard #metallkraft-preview { grid-area: 2 / 1 / 5 / 2; min-height: 0 !important; align-self: stretch; }
+  #dashboard #target_metallkraft-preview { min-height: 0 !important; }
+  #dashboard #terminalPanel { grid-area: 4 / 4 / 6 / 5; height: auto !important; min-height: 0 !important; }
+  #dashboard #metallkraft-news { grid-area: 5 / 1 / 7 / 2; height: auto !important; align-self: stretch; }
+  #extra_content_metallkraft-news iframe { width: 100%; }
+  #dashboard > .buttons-bar .quick-buttons-bar { grid-area: 6 / 4 / 7 / 5; margin: 0 !important; min-height: 64px; }
+  #btnEStop { position: fixed; right: 8px; bottom: 8px; z-index: 1001; width: max(215px,calc((100% - 40px) / 4.5)); height: 64px; min-width: 0; font-size: 22px; }
+  #dashboard .panel-dashboard:not(#filesPanel):not(#statusPanel):not(#jogPanel):not(#SpindlePanel):not(#terminalPanel):not(#metallkraft-preview):not(#metallkraft-news):not(#metallkraft-job):not(#OverridesPanel):not(#ProbePanel):not(#notificationsPanel):not(#macrosPanel):not(.mk-fold-panel) { grid-column: 1 / -1; }
+}
+@media (max-width: 899px), (max-height: 767px) {
+  #dashboard > .buttons-bar { position: sticky; top: 0; z-index: 1001; background: #d7d7d7; padding: 4px 0; }
+  #metallkraft-preview { order: -2; grid-column: 1 / -1; }
+  #jogPanel { order: -1; }
+}
+@media (min-width: 900px) and (max-width: 1100px) and (min-height: 768px) {
+  #jogPanel .jog-position-ctrl { grid-template-columns: 24px 30px minmax(0,1fr); padding: 3px 6px; }
+  #jogPanel .jog-position-value:nth-child(4) { font-size: 24px; }
+  #jogPanel .jog-buttons-container [id^="btnH"]::before, #jogPanel .jog-buttons-container [id^="btnZ"]::before { font-size: 12px; line-height: 1.15; }
+}
+@media (max-width: 650px) {
+  #dashboard .panels-container { grid-template-columns: minmax(0,1fr); }
+  #dashboard { padding: 6px; }
+  header.navbar .navbar-brand { padding-right: 8px; }
+  header.navbar .navbar-brand::after, .metallkraft-wordmark { font-size: 21px; }
+  #btnEStop { min-width: 190px; min-height: 58px; font-size: 21px; }
+}
+
+/* The existing Hold label is the 16px floor; retain larger readouts and hidden labels. */
+body { font-size: 16px; }
+.btn label, .form-label, .form-select, .form-input, .menu, .tooltip::after,
+#dashboard .text-tiny, #dashboard .text-small,
+#dashboard .panel-dashboard > .navbar .dropdown-toggle,
+#filesPanel .files-list-footer, #filesPanel .files-list-footer *,
+#terminalPanel .terminal pre, #terminalPanel .terminal pre *,
+.panel-dashboard .extra-control-header,
+#statusPanel .status-ctrls .extra-control-value,
+#SpindlePanel .states-buttons-container .btn,
+#SpindlePanel .states-buttons-container .btn label,
+#SpindlePanel .form-group label,
+#SpindlePanel .form-group .form-label { font-size: 16px; line-height: 1.3; }
+#terminalPanel .terminal pre { font-size: 16px; line-height: 1.4; }
+#jogPanel .jog-position-sub-header::before,
+#jogPanel .jog-distance-selector-header::before,
+#jogPanel .jog-axis-group::before,
+#jogPanel .jog-buttons-container [id^="btnH"]::before,
+#jogPanel .jog-buttons-container [id^="btnZ"]::before,
+#jogPanel #btnHAll::before, #jogPanel #btnZAll::before,
+#jogPanel .dropdown-toggle::before,
+#statusPanel .status-ctrls::before,
+#SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) legend label::before,
+#SpindlePanel .states-buttons-container button:has(svg)::before { font-size: 16px; line-height: 1.2; }
+#jogPanel .jog-position-ctrl { grid-template-columns: 28px 38px minmax(0,1fr); }
+#jogPanel { --jog-cell: min(80px,calc((100cqw - 12px) / 4)); --jog-rows: repeat(3,var(--jog-cell)) 52px 52px 26px 48px 8px 26px 48px minmax(64px,1fr); container-type: inline-size; }
+#dashboard { container-type: inline-size; }
+@media (min-width: 900px) and (min-height: 768px) {
+  /* Match the existing 1.5fr/1fr/1fr/1fr dashboard and 215px column minimum. */
+  #jogPanel { --jog-cell: min(80px,calc((max(215px,(100cqw - 24px) / 4.5) - 12px) / 4)); }
+}
+#jogPanel .jog-buttons-main-container, #jogPanel .jog-extra-buttons-container { gap: 4px; }
+#jogPanel .jog-buttons-main-container { position: relative; }
+#jogPanel .jog-buttons-container [id^="btn+"], #jogPanel .jog-buttons-container [id^="btn-"] {
+  grid-column: 1 / -1; justify-self: center; width: var(--jog-cell); height: var(--jog-cell);
+}
+#jogPanel [id="btn-X"] { transform: translateX(calc(-1.5 * (var(--jog-cell) + 4px))); }
+#jogPanel [id="btn+X"] { transform: translateX(calc(.5 * (var(--jog-cell) + 4px))); }
+#jogPanel [id="btn+Y"], #jogPanel [id="btn-Y"] { transform: translateX(calc(-.5 * (var(--jog-cell) + 4px))); }
+#jogPanel [id="btn+Z"], #jogPanel [id="btn-Z"] { transform: translateX(calc(1.5 * (var(--jog-cell) + 4px))); }
+#jogPanel .jog-buttons-main-container::before, #jogPanel .jog-buttons-main-container::after { grid-column: 1 / -1; justify-self: center; width: var(--jog-cell); }
+#jogPanel .jog-buttons-main-container::before { transform: translateX(calc(-.5 * (var(--jog-cell) + 4px))); }
+#jogPanel .jog-buttons-main-container::after { transform: translateX(calc(1.5 * (var(--jog-cell) + 4px))); }
+#jogPanel #btnStop { height: 64px; align-self: end; }
+#jogPanel .jog-distance-selector-container { grid-template-columns: minmax(40px,1.4fr) minmax(32px,1.1fr) repeat(3,minmax(24px,1fr)); grid-template-rows: 24px 28px; }
+#jogPanel .jog-distance-selector-header { grid-column: 1 / -1; padding: 2px 4px; }
+#jogPanel .jog-distance-selector-container:has(#move_xy_1) .jog-distance-selector-header::before { content: "XY 移動量 (mm / 回)"; }
+#jogPanel .jog-distance-selector-container:has(#move_z_1) .jog-distance-selector-header::before { content: "Z 移動量 (mm / 回)"; }
+#jogPanel .jog-distance-selector-container label { height: 28px; line-height: 20px; }
+#btnEStop label { font-size: inherit; }
+#jogPanel .jog-axis-group::before { padding: 3px 4px; }
+#SpindlePanel .extra-control-header { font-size: 16px; line-height: 1.25; min-height: 60px; }
+#SpindlePanel .states-buttons-container .btn { min-height: 36px; }
+#SpindlePanel .form-group .form-label { flex-basis: 128px; width: 128px; }
+#filesPanel .files-list-footer { flex-wrap: wrap; gap: 4px; }
+#filesPanel .files-list-footer > * { min-width: 0; }
+#jogPanel > .navbar { flex-wrap: nowrap; }
+#jogPanel > .navbar .navbar-section { min-width: 0; }
+#jogPanel > .navbar .navbar-section:first-child { flex: 1 1 auto; }
+#jogPanel > .navbar .navbar-section:last-child { flex: 0 0 auto; }
+#jogPanel > .navbar .dropdown-toggle { padding: 2px 3px; margin: 0 !important; }
+#jogPanel > .navbar strong { overflow: visible; text-overflow: clip; }
+#dashboard #metallkraft-news > .navbar { height: auto; }
+#metallkraft-news > .navbar .navbar-section:first-child { flex: 1 1 auto; min-width: 0; }
+#metallkraft-news > .navbar .navbar-section:last-child { display: none; }
+#metallkraft-news > .navbar svg { flex-shrink: 0; }
+#metallkraft-news > .navbar strong { white-space: normal; overflow-wrap: anywhere; line-height: 1.2; padding: 3px 0; }
+@media (min-width: 900px) and (min-height: 768px) {
+  #dashboard { grid-template-rows: minmax(44px,max-content) minmax(214px,max-content) 28px minmax(122px,1fr) 88px 64px; }
+}
+@media (min-width: 900px) and (max-width: 1100px) and (min-height: 768px) {
+  #dashboard { grid-template-rows: minmax(44px,max-content) minmax(214px,max-content) 28px minmax(122px,1fr) 108px 64px; }
+}
+
+/* Reuse native tooltip paint; do not change data-tooltip or button handlers. */
+#app .tooltip::after {
+  content: var(--mk-help,attr(data-tooltip)); display: none; opacity: 0; visibility: hidden;
+  transition: none;
+  width: max-content; max-width: min(320px,calc(100vw - 32px)); white-space: normal;
+  overflow-wrap: anywhere; text-overflow: clip; border: 1px solid #555; border-radius: 0;
+  padding: 8px 10px; background: #fffde8; color: #111; font-size: 16px; line-height: 1.5; text-align: left;
+  pointer-events: none; z-index: 12000;
+}
+#app .tooltip:is(:hover,:focus-visible)::after { display: block; animation: mk-help-show 0s linear 1s both; }
+@keyframes mk-help-show { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
+#app #statusPanel .status-buttons-container .tooltip::after { top: 100%; bottom: auto; left: auto; right: 0; transform: translateY(8px); }
+#app #SpindlePanel .tooltip::after { left: 0; right: auto; top: 100%; bottom: auto; transform: translateY(4px); }
+#app #SpindlePanel [data-tooltip="主軸を停止"]::after { left: auto; right: 0; }
+#app #jogPanel .tooltip::after { max-width: min(300px,calc(4 * var(--jog-cell) + 8px)); }
+/* Anchor all four origin buttons to the same left edge of their control row. */
+#app #jogPanel :is(#btnZX,#btnHX)::after { left: 0; right: auto; transform: none; }
+#app #jogPanel :is(#btnZY,#btnHY)::after { left: calc(-100% - 6px); right: auto; transform: none; }
+#app #jogPanel :is(#btnZZ,#btnHZ)::after { left: calc(-200% - 12px); right: auto; transform: none; }
+#app #jogPanel :is(#btnZAll,#btnHAll)::after { left: calc(-300% - 18px); right: auto; transform: none; }
+@media (max-width: 899px), (max-height: 767px) {
+  #app #statusPanel .tooltip:is([data-tooltip="一時停止"],[data-tooltip="再開"],[data-tooltip="アラーム解除"])::after { left: 0; right: auto; }
+}
+#app #btnEStop::after { left: auto; right: 0; top: auto; bottom: calc(100% + 8px); transform: none; }
+#app .tooltip[data-tooltip="一時停止"] { --mk-help: "加工の送りを減速して一時停止します。主軸は停止しない場合があります。続けるときは「再開」を押します。"; }
+#app .tooltip[data-tooltip="再開"] { --mk-help: "一時停止した加工を再開します。工具・材料・周囲の安全を確認してから押してください。"; }
+#app .tooltip[data-tooltip="リセット"] { --mk-help: "実行中の処理を中断して制御をリセットします。そのまま加工を再開せず、機械位置と原点を確認してください。"; }
+#app .tooltip[data-tooltip="アラーム解除"] { --mk-help: "原因を取り除いた後にアラームを解除します。故障や干渉の原因を直す機能ではありません。"; }
+#app .tooltip[data-tooltip="スリープ"] { --mk-help: "制御をスリープ状態にします。モーターの保持が失われる場合があります。復帰後は原点を確認してください。"; }
+#app #btnEStop { --mk-help: "FluidNCの安全ドア指令を送ります。停止動作は基板設定に依存します。通信経由の停止で、物理非常停止の代わりにはなりません。"; }
+#app #btnStop { --mk-help: "位置合わせ中のジョグ移動を取り消します。加工プログラムや主軸を止めるボタンではありません。"; }
+#app .tooltip[data-tooltip="主軸を正転"] { --mk-help: "設定回転数で主軸の正転指令を送ります。工具と周囲を確認してください。実測回転数を確認する機能ではありません。"; }
+#app .tooltip[data-tooltip="主軸を停止"] { --mk-help: "主軸へ停止指令を送ります。表示が0でも実際の停止を保証しないため、工具が止まったことを確認してください。"; }
+#app .tooltip[data-tooltip="主軸回転数指令 (rpm)"] { --mk-help: "基板から受信した主軸回転数の指令値です。回転センサーによる実測値ではありません。停止モードでは0を表示します。"; }
+#app .tooltip[data-tooltip="1回の移動量"] { --mk-help: "方向ボタンを1回押したときの移動量を選びます。0.01 mmは指令の刻みで、実機の加工精度を保証する値ではありません。"; }
+#app .tooltip[data-tooltip="現在位置を作業原点に設定"] { --mk-help: "この軸の現在位置を、選択中の作業座標の0に設定します。機械は移動しません。材料と工具の位置を確認してください。"; }
+#app #btnZAll { --mk-help: "X・Y・Zの現在位置をまとめて作業座標の0に設定します。機械は移動しません。3軸すべての基準が変わります。"; }
+#app .tooltip[data-tooltip="機械原点へ復帰"] { --mk-help: "この軸を原点スイッチへ向けて動かし、機械原点を検出します。作業原点への移動ではありません。配線・原点復帰設定が必要です。"; }
+#app #btnHAll { --mk-help: "設定された順序で全軸の原点復帰を行います。実際に機械が動きます。工具・材料との干渉と原点スイッチを確認してください。"; }
+#app .tooltip[data-tooltip="Play file"] { --mk-help: "このファイルの加工を開始します。プレビューの選択とは別です。実行ファイル・原点・工具・材料固定を確認してください。"; }
+#app .tooltip[data-tooltip="ファイルを再生"] { --mk-help: "このファイルの加工を開始します。プレビューの選択とは別です。実行ファイル・原点・工具・材料固定を確認してください。"; }
+
+/* Triangle clip-path also clips native help. Paint its help on the unclipped parent. */
+#jogPanel .jog-buttons-container :is([id^="btn+"],[id^="btn-"])::after { display: none; }
+#jogPanel .jog-container > .m-1:not(.jog-positions-ctrls) { position: relative; }
+#jogPanel .jog-container > .m-1:not(.jog-positions-ctrls)::after {
+  content: var(--jog-help,""); position: absolute; top: calc(3 * (var(--jog-cell) + 4px)); left: 0; right: 0;
+  opacity: 0; visibility: hidden; pointer-events: none; z-index: 12000;
+  background: #fffde8; color: #111; border: 1px solid #555; padding: 8px 10px; font-size: 16px; line-height: 1.5;
+  animation: var(--jog-help-animation,none) 0s linear 1s both;
+}
+#jogPanel .m-1:has([id="btn+X"]:is(:hover,:focus-visible)) { --jog-help: "Xをプラス方向へ、選択したXY移動量だけ動かします。速度は「移動速度」で設定します。"; --jog-help-animation: jog-help-xp; }
+#jogPanel .m-1:has([id="btn-X"]:is(:hover,:focus-visible)) { --jog-help: "Xをマイナス方向へ、選択したXY移動量だけ動かします。速度は「移動速度」で設定します。"; --jog-help-animation: jog-help-xm; }
+#jogPanel .m-1:has([id="btn+Y"]:is(:hover,:focus-visible)) { --jog-help: "Yをプラス方向へ、選択したXY移動量だけ動かします。移動先に工具や材料の干渉がないことを確認してください。"; --jog-help-animation: jog-help-yp; }
+#jogPanel .m-1:has([id="btn-Y"]:is(:hover,:focus-visible)) { --jog-help: "Yをマイナス方向へ、選択したXY移動量だけ動かします。移動先に工具や材料の干渉がないことを確認してください。"; --jog-help-animation: jog-help-ym; }
+#jogPanel .m-1:has([id="btn+Z"]:is(:hover,:focus-visible)) { --jog-help: "Zをプラス方向へ、選択したZ移動量だけ動かします。通常は工具が上がる方向ですが、実機の方向設定を確認してください。"; --jog-help-animation: jog-help-zp; }
+#jogPanel .m-1:has([id="btn-Z"]:is(:hover,:focus-visible)) { --jog-help: "Zをマイナス方向へ、選択したZ移動量だけ動かします。通常は工具が下がる方向です。材料との衝突に注意してください。"; --jog-help-animation: jog-help-zm; }
+@keyframes jog-help-xp { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
+@keyframes jog-help-xm { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
+@keyframes jog-help-yp { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
+@keyframes jog-help-ym { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
+@keyframes jog-help-zp { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
+@keyframes jog-help-zm { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
+
+/* Native details/summary: one auxiliary panel opens at a time, no UI script. */
+#dashboard .mk-fold-panel { position: relative; align-self: stretch; border: 0; }
+#dashboard .mk-fold-panel > summary.navbar { display: flex; list-style: none; cursor: pointer; min-height: 40px; height: 40px; padding: 3px 8px; background: #e5e5df; color: #111; border: 1px solid #777; box-shadow: inset 1px 1px #fff,inset -1px -1px #999 !important; }
+#dashboard .mk-fold-panel > summary::-webkit-details-marker { display: none; }
+#dashboard .mk-fold-panel > summary::after { content: "▼"; margin-left: 6px; font-size: 16px; }
+#dashboard .mk-fold-panel[open] > summary::after { content: "▲"; }
+#dashboard .mk-fold-panel[open] > summary { background: #fff; border-color: #222; }
+#dashboard .mk-fold-panel > summary .navbar-section:first-child { min-width: 0; gap: 4px; }
+#dashboard .mk-fold-panel > summary.navbar .navbar-section { background: transparent; color: #111; box-shadow: none; }
+#dashboard .mk-fold-panel > summary .navbar-section:last-child { display: none; }
+#dashboard .mk-fold-panel > summary strong { white-space: normal; overflow: visible; line-height: 1.2; font-size: 16px; }
+#dashboard .mk-fold-panel:not([open]) > :not(summary) { display: none !important; }
+#dashboard .mk-fold-panel > .panel-body { padding: 12px !important; background: #e1e1dc; border: 2px solid #666; box-shadow: 2px 3px 0 #555 !important; }
+#dashboard .mk-fold-panel, #dashboard .mk-fold-panel * { box-sizing: border-box; }
+#dashboard .mk-fold-panel .field-group-content { margin: 0; padding: 0; width: 100%; min-width: 0; max-width: 100%; }
+#dashboard .mk-fold-panel fieldset { margin: 4px 0 10px; padding: 0; }
+#dashboard .mk-fold-panel legend { display: block; margin: 0 0 4px; padding: 0; }
+#dashboard .mk-fold-panel .status-ctrls { margin: 0 0 8px; gap: 4px; display: flex; }
+#dashboard .mk-fold-panel .extra-control { min-width: 0; flex: 1; }
+#dashboard .mk-fold-panel .extra-control-header { white-space: normal; font-size: 16px; }
+#dashboard .mk-fold-panel .states-buttons-container { gap: 4px; }
+#dashboard .mk-fold-panel .btn { min-height: 38px; margin: 0 !important; }
+#dashboard #OverridesPanel .extra-control-header { font-size: 0; }
+#OverridesPanel .extra-control-header::before { font-size: 16px; }
+#OverridesPanel .extra-control:nth-child(1) .extra-control-header::before { content: "主軸"; }
+#OverridesPanel .extra-control:nth-child(2) .extra-control-header::before { content: "加工送り"; }
+#OverridesPanel .extra-control:nth-child(3) .extra-control-header::before { content: "早送り"; }
+#OverridesPanel .states-buttons-container { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); }
+#OverridesPanel fieldset:last-child .states-buttons-container { grid-template-columns: repeat(3,minmax(0,1fr)); }
+#ProbePanel .field-group-content > .states-buttons-container { display: block; }
+#ProbePanel .form-group .columns { display: grid; grid-template-columns: minmax(104px,1fr) minmax(130px,1fr); align-items: center; margin: 0; gap: 8px; }
+#ProbePanel .form-group .columns > * { width: auto; min-width: 0; padding: 0; }
+#ProbePanel .form-group { margin: 0 0 6px; }
+#ProbePanel .form-input, #ProbePanel .form-select { min-width: 0; width: 100%; }
+#dashboard #ProbePanel .form-input, #dashboard #ProbePanel .form-select { min-height: 36px; height: 36px; }
+#dashboard #ProbePanel .extra-control { display: grid; grid-template-columns: 1fr 60px 60px; align-items: center; }
+#dashboard #ProbePanel .extra-control > * { min-height: 0; height: 36px; display: flex; align-items: center; justify-content: center; margin: 0 !important; }
+#dashboard #ProbePanel .status-label { width: 28px; height: 28px; padding: 0; line-height: 28px; }
+#ProbePanel .input-group-addon { white-space: nowrap; padding: 4px; }
+#ProbePanel [data-tooltip="プローブ測定を開始"] { width: 100%; border: 2px solid #927020; background: #fff0bd; }
+#dashboard #notificationsPanel .notification-line { align-items: start; white-space: normal; overflow-wrap: anywhere; }
+#dashboard #notificationsPanel .notification-line label { min-width: 0; }
+#dashboard #notificationsPanel .panel-body:has(> :only-child)::after { content: "通知はありません"; color: #444; }
+#dashboard #macrosPanel .macro-buttons-panel:empty::after { content: "登録済みマクロはありません"; color: #444; }
+#app #OverridesPanel .tooltip::after, #app #ProbePanel .tooltip::after { left: 0; right: auto; top: auto; bottom: 100%; transform: none; max-width: 250px; }
+#filesPanel .mk-file-capacity { display: block; }
+#filesPanel .mk-file-capacity > summary { cursor: pointer; padding: 4px 8px; border: 1px solid #888; background: #eee; color: #111; }
+#filesPanel .mk-file-capacity:not([open]) > :not(summary) { display: none; }
+#filesPanel .mk-file-capacity[open] > .m-1:not(.flex-pack) { display: none; }
+#filesPanel .files-list-footer { display: flex; align-items: start; justify-content: space-between; }
+#filesPanel .files-list-footer .file-status { margin-left: auto; padding: 4px; }
+
+@media (min-width: 900px) and (min-height: 768px) {
+  #dashboard { grid-template-rows: minmax(44px,max-content) minmax(214px,max-content) 28px minmax(100px,1fr) 88px 64px 40px; }
+  #jogPanel { --jog-cell: min(80px,calc((100dvh - 602px) / 3),calc((max(215px,(100cqw - 24px) / 4.5) - 12px) / 4)); }
+  #dashboard #OverridesPanel { grid-area: 7 / 1 / 8 / 2; }
+  #dashboard #ProbePanel { grid-area: 7 / 2 / 8 / 3; }
+  #dashboard #macrosPanel { grid-area: 7 / 3 / 8 / 4; }
+  #dashboard #notificationsPanel { grid-area: 7 / 4 / 8 / 5; }
+  #btnEStop { bottom: 56px; }
+  #dashboard #filesPanel { min-height: 0 !important; }
+  #dashboard #filesPanel > .panel-body { flex: 1 1 0; min-height: 0 !important; }
+  #dashboard #filesPanel .files-list { flex: 1 1 0; min-height: 0 !important; overflow-y: auto !important; overflow-x: hidden !important; overscroll-behavior: contain; }
+  #dashboard .mk-fold-panel > .panel-body { position: absolute; bottom: calc(100% + 80px); left: 0; width: min(440px,calc(100vw - 24px)); max-height: calc(100dvh - 190px) !important; overflow: auto !important; z-index: 1100; }
+  #dashboard :is(#macrosPanel,#notificationsPanel) > .panel-body { left: auto; right: 0; }
+  #dashboard .mk-fold-panel > .panel-body::before { display: block; font-weight: 700; font-size: 18px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #888; }
+  #dashboard #macrosPanel > .panel-body::before { content: "マクロ"; }
+}
+@media (min-width: 900px) and (max-width: 1100px) and (min-height: 768px) {
+  #dashboard { grid-template-rows: minmax(44px,max-content) minmax(214px,max-content) 28px minmax(80px,1fr) 108px 64px 40px; }
+}
+
+/* Keep native primary controls visible; only parameter nodes use disclosure. */
+#dashboard :is(#OverridesPanel,#ProbePanel) { position: relative; }
+#dashboard :is(#OverridesPanel,#ProbePanel) > .navbar .navbar-section:last-child { display: none; }
+#dashboard :is(#OverridesPanel,#ProbePanel), #dashboard :is(#OverridesPanel,#ProbePanel) * { box-sizing: border-box; }
+#dashboard :is(#OverridesPanel,#ProbePanel) > .panel-body { padding: 0 !important; }
+.mk-parameters > summary { list-style: none; cursor: pointer; border: 1px solid #777; padding: 3px 5px; min-height: 28px; background: #e5e5df; color: #111; font-size: 16px; line-height: 20px; box-shadow: inset 1px 1px #fff,inset -1px -1px #999 !important; }
+.mk-parameters > summary::-webkit-details-marker { display: none; }
+.mk-parameters > summary::after { content: " ▾"; }
+.mk-parameters[open] > summary::after { content: " ▴"; }
+.mk-parameters > summary:focus-visible { outline: 3px solid #2458a6; outline-offset: 2px; }
+.mk-parameters:not([open]) > :not(summary) { display: none !important; }
+#dashboard .mk-parameter-content, #dashboard .mk-rapid-parameters > .field-group-content { position: absolute; bottom: calc(100% + 8px); right: 0; width: min(360px,calc(100vw - 24px)); padding: 10px; border: 2px solid #666; background: #e1e1dc; box-shadow: 2px 3px #555 !important; z-index: 1100; }
+#dashboard .mk-parameter-content { max-height: calc(100dvh - 200px); overflow: auto; }
+#dashboard .mk-parameter-content strong { display: block; grid-column: 1 / -1; margin-bottom: 4px; }
+#dashboard .mk-parameter-content .btn { min-height: 36px; margin: 0 !important; }
+
+#dashboard #OverridesPanel > .panel-body { display: grid; grid-template-columns: minmax(86px,1fr) minmax(0,1.5fr); grid-template-rows: 34px 34px; gap: 3px; margin-top: 1px; }
+#OverridesPanel .status-ctrls, #OverridesPanel fieldset, #OverridesPanel fieldset > .field-group-content { display: contents; }
+#dashboard #OverridesPanel .extra-control { margin: 0 !important; display: grid; grid-template-columns: 32px minmax(0,1fr); align-items: center; min-width: 0; }
+#OverridesPanel .extra-control:nth-child(1) { grid-area: 1 / 1; }
+#OverridesPanel .extra-control:nth-child(2) { grid-area: 2 / 1; }
+#dashboard #OverridesPanel .extra-control-header { min-height: 0; background: transparent; }
+#dashboard #OverridesPanel .extra-control-value { font-size: 18px; font-weight: 700; padding: 3px 0; }
+#dashboard #OverridesPanel .extra-control:nth-child(3) { display: none; }
+#dashboard #OverridesPanel:has(.mk-rapid-parameters[open]) .extra-control:nth-child(3) { display: grid; position: absolute; right: 12px; bottom: calc(100% + 60px); width: min(300px,calc(100vw - 48px)); z-index: 1101; }
+#OverridesPanel .extra-control:nth-child(2) .extra-control-header::before { content: "送り"; }
+#OverridesPanel fieldset legend { display: none; }
+#OverridesPanel fieldset .states-buttons-container { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) 42px; gap: 3px; margin: 0; padding: 0; width: 100%; }
+#OverridesPanel fieldset:nth-of-type(1) .states-buttons-container { grid-area: 1 / 2; }
+#OverridesPanel fieldset:nth-of-type(2) .states-buttons-container { grid-area: 2 / 2; }
+#dashboard #OverridesPanel .btn { min-width: 0; min-height: 34px; height: 34px; padding: 2px; margin: 0 !important; }
+#OverridesPanel .mk-override-parameters > summary { height: 34px; padding: 5px 2px; text-align: center; }
+#OverridesPanel .mk-override-parameters > summary::after { content: ""; }
+#OverridesPanel .mk-override-parameters[open] > summary { background: #fff; border-color: #2458a6; }
+#OverridesPanel .mk-override-parameters .mk-parameter-content { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; }
+#OverridesPanel .mk-rapid-parameters { position: static; grid-area: 1 / 2; height: 0; min-height: 0; margin: 0; padding: 0; border: 0; }
+#OverridesPanel .mk-rapid-parameters > summary { position: absolute; top: 2px; right: 0; font-size: 0; }
+#OverridesPanel .mk-rapid-parameters > summary label { display: none; }
+#OverridesPanel .mk-rapid-parameters > summary::before { content: "早送り"; font-size: 16px; }
+#OverridesPanel .mk-rapid-parameters > summary::after { font-size: 16px; }
+#dashboard #OverridesPanel .mk-rapid-parameters > .field-group-content { padding-top: 48px; margin: 0; }
+#OverridesPanel .mk-rapid-parameters .states-buttons-container { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; }
+#OverridesPanel > .navbar strong { font-size: 16px !important; }
+#OverridesPanel > .navbar svg { display: none; }
+#OverridesPanel > .navbar .navbar-section:first-child { padding-right: 85px; }
+#OverridesPanel [data-tooltip="主軸回転数の補正"] { --mk-help: "設定回転数に対する主軸の倍率です。-10 / +10 は10ポイントずつ変更します。100%が元の指令値です。実測回転数ではありません。"; }
+#OverridesPanel [data-tooltip="加工送りの補正"] { --mk-help: "加工プログラムの送り速度に対する倍率です。-10 / +10 は10ポイントずつ変更します。100%が元の送り速度です。ジョグ速度とは別です。"; }
+
+#dashboard #ProbePanel .status-ctrls { margin: 3px 0 !important; }
+#dashboard #ProbePanel .extra-control { display: grid; grid-template-columns: 1fr 60px 60px; margin: 0 !important; }
+#dashboard #ProbePanel .extra-control > * { height: 26px; }
+#dashboard #ProbePanel :is(.badge-container,.badge-label) { font-size: 16px; height: 24px; width: 24px; line-height: 22px; margin: 0 !important; }
+#dashboard #ProbePanel fieldset { margin: 0; padding: 0; border: 0; }
+#ProbePanel fieldset > legend { display: none; }
+#ProbePanel .field-group-content { margin: 0; padding: 0; width: 100%; }
+#ProbePanel .mk-probe-parameters > summary { position: absolute; right: 0; top: 2px; }
+#ProbePanel .mk-parameter-content > .states-buttons-container { display: block; margin: 0; }
+#ProbePanel .mk-parameter-content .m-2 { display: none; }
+#dashboard #ProbePanel [data-tooltip="プローブ測定を開始"] { height: 36px; min-height: 36px; margin: 0 !important; }
+#ProbePanel [data-tooltip="プローブ測定を開始"] .insensitive { display: flex; height: 100%; align-items: center; justify-content: center; }
+#ProbePanel [data-tooltip="プローブ測定を開始"] label { display: none; }
+#ProbePanel [data-tooltip="プローブ測定を開始"] .insensitive::after { content: "プローブ測定開始"; font-size: 16px; }
+#ProbePanel [data-tooltip="プローブ測定を開始"] { --mk-help: "設定された軸・距離・送り速度でプローブ測定を開始します。工具が実際に動きます。測定条件・センサーの反応・接触位置を確認してください。"; }
+#dashboard #notificationsPanel > .panel-body { overflow: auto !important; min-height: 0 !important; height: auto !important; max-height: 120px !important; padding: 4px !important; background: #f6f6f2; border: 1px solid #999; font-size: 16px; }
+#notificationsPanel .notification-line { font-size: 16px; line-height: 1.35; }
+#notificationsPanel .notification-line label { margin: 0 3px 0 0 !important; }
+#notificationsPanel > .navbar strong { font-size: 16px !important; }
+#dashboard #notificationsPanel .panel-body:has(> :only-child)::after { content: "履歴はありません"; }
+
+@media (min-width: 900px) and (min-height: 768px) {
+  #dashboard { grid-template-rows: minmax(44px,max-content) minmax(214px,max-content) 28px minmax(100px,1fr) 88px 106px; }
+  #jogPanel { --jog-rows: repeat(3,var(--jog-cell)) 52px 52px 26px 48px 8px 26px 48px; }
+  #jogPanel .jog-container > .m-1:not(.jog-positions-ctrls), #jogPanel .jog-extra-buttons-container { grid-row-end: 6; }
+  #jogPanel .jog-buttons-main-container::before { display: none; }
+  #jogPanel #btnStop { grid-area: 2 / 1 / 3 / -1; justify-self: center; align-self: center; width: var(--jog-cell); height: var(--jog-cell); transform: translateX(calc(-.5 * (var(--jog-cell) + 4px))); }
+  #jogPanel #btnStop::before { content: "移動\a停止"; white-space: pre-line; line-height: 1.2; }
+  #dashboard #OverridesPanel { grid-area: 6 / 3 / 7 / 4; }
+  #dashboard #ProbePanel { grid-area: 6 / 2 / 7 / 3; }
+  #dashboard #filesPanel { grid-row-end: 6; }
+  #dashboard #macrosPanel { grid-area: 6 / 1 / 7 / 2; align-self: end; }
+  #dashboard #notificationsPanel { grid-area: 5 / 4 / 6 / 5; display: flex; flex-direction: column; }
+  #dashboard #notificationsPanel > .m-1:not(.panel-body) { display: none; }
+  #dashboard #notificationsPanel > .panel-body { flex: 1 1 0; margin: 0 !important; }
+  #dashboard #terminalPanel { grid-row-end: 5; }
+  #dashboard #metallkraft-news { grid-row-end: 7; padding-bottom: 48px; }
+  #dashboard > .buttons-bar .quick-buttons-bar { grid-area: 6 / 4 / 7 / 5; }
+  #btnEStop { bottom: 8px; height: 106px; }
+  #dashboard .mk-fold-panel > .panel-body { bottom: calc(100% + 118px); left: 0; right: auto; }
+  #dashboard #macrosPanel > .panel-body { left: 0; right: auto; }
+}
+@media (max-width: 899px), (max-height: 767px) {
+  #dashboard #OverridesPanel { order: -1; }
+  #dashboard #ProbePanel { order: -1; }
+  #dashboard #OverridesPanel > .panel-body { min-height: 72px !important; }
+  #dashboard #notificationsPanel > .panel-body { max-height: 180px !important; }
+}
+
+/* Native state and native pause/resume actions; colors do not infer machine state. */
+#statusPanel .status-buttons-container :is([data-tooltip="一時停止"],[data-tooltip="再開"]) {
+  background: #eee !important; color: #222 !important; border-color: #fff #777 #777 #fff !important;
+}
+#statusPanel:has([data-machine-state="Run"]) .status-buttons-container [data-tooltip="一時停止"] {
+  background: #3a844c !important; color: #fff !important; border-color: #a5d0af #245b31 #245b31 #a5d0af !important;
+}
+#statusPanel:has([data-machine-state="Hold"]) .status-buttons-container [data-tooltip="再開"],
+#statusPanel:has([data-machine-state="Tool"]) .status-buttons-container [data-tooltip="再開"] {
+  background: #f2ce5b !important; color: #251c00 !important; border-color: #fff0b0 #a58220 #a58220 #fff0b0 !important;
+}
+#dashboard #metallkraft-job { height: 94px !important; min-height: 94px !important; overflow: hidden; padding: 0; }
+#dashboard #metallkraft-job > .navbar { display: none; }
+#dashboard #metallkraft-job .panel-body, #dashboard #target_metallkraft-job { height: 100% !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; overflow: hidden !important; }
+#extra_content_metallkraft-job { z-index: 10; background: #d7d7d7; }
+#extra_content_metallkraft-job iframe { display: block; padding: 0; width: 100%; height: 100%; border: 0; }
+#extra_content_metallkraft-job .image-button-bar { display: none; }
+@media (min-width: 900px) and (min-height: 768px) {
+  #dashboard #filesPanel { padding-bottom: 102px; }
+  #dashboard #metallkraft-job { grid-area: 3 / 2 / 6 / 3; align-self: end; z-index: 1; }
+}
