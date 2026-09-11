@@ -188,6 +188,14 @@ try {
   const guide = page.locator('#mk-recovery-guide');
   const native = label => page.locator('#statusPanel [data-tooltip="'+label+'"]');
   const nonPolling = start => commands.slice(start).filter(cmd=>!['?','$G','$I','$/report_inches'].includes(cmd));
+  assert.match(await native('スリープ').evaluate(e=>getComputedStyle(e,'::after').content), /保持を解除/);
+  assert.match(await page.locator('#btnEStop').evaluate(e=>getComputedStyle(e,'::after').content), /物理非常停止の代わりにはなりません/);
+  await native('スリープ').hover();
+  await page.waitForTimeout(1100);
+  assert.equal(await native('スリープ').evaluate(e=>getComputedStyle(e,'::after').visibility), 'visible');
+  await page.screenshot({path:'test-results/sleep-help.png'});
+  await page.mouse.move(0,0);
+  assert.equal(await native('リセット').evaluate(e=>getComputedStyle(e).animationName), 'none');
   let start = commands.length;
   await native('スリープ').click();
   await page.waitForTimeout(250);
@@ -195,6 +203,22 @@ try {
   machineState = 'Sleep'; broadcast(status());
   await guide.getByText('スリープから戻すには').waitFor();
   assert.equal(await native('リセット').evaluate(e=>getComputedStyle(e).outlineStyle), 'solid');
+  assert.equal(await native('リセット').evaluate(e=>getComputedStyle(e).animationName), 'mk-recovery-action');
+  assert.equal(await guide.evaluate(e=>getComputedStyle(e).animationName), 'mk-recovery-guide-edge');
+  const pulse = await native('リセット').evaluate(e => {
+    const animation = e.getAnimations().find(a=>a.animationName==='mk-recovery-action');
+    animation.pause(); animation.currentTime=0;
+    const first={color:getComputedStyle(e).outlineColor,rect:e.getBoundingClientRect().toJSON()};
+    animation.currentTime=900;
+    const second={color:getComputedStyle(e).outlineColor,rect:e.getBoundingClientRect().toJSON()};
+    animation.play(); return {first,second};
+  });
+  assert.notEqual(pulse.first.color, pulse.second.color, 'Recovery outline visibly blinks');
+  assert.deepEqual(pulse.first.rect, pulse.second.rect, 'Pulsing cannot move the target');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  assert.equal(await native('リセット').evaluate(e=>getComputedStyle(e).animationName), 'none');
+  assert.equal(await guide.evaluate(e=>getComputedStyle(e).animationName), 'none');
+  await page.emulateMedia({reducedMotion:'no-preference'});
   await page.screenshot({path:'test-results/recovery-sleep.png'});
   start = commands.length;
   await native('リセット').click();
@@ -202,6 +226,8 @@ try {
   assert.deepEqual(nonPolling(start), ['\x18']);
   machineState = 'Alarm'; broadcast('ALARM:3\n'); broadcast(status());
   await guide.getByText('アラーム解除の前に').waitFor();
+  assert.equal(await native('リセット').evaluate(e=>getComputedStyle(e).animationName), 'none');
+  assert.equal(await native('アラーム解除').evaluate(e=>getComputedStyle(e).animationName), 'mk-recovery-action');
   start = commands.length;
   await native('アラーム解除').click();
   await page.waitForTimeout(250);
@@ -212,6 +238,7 @@ try {
   await guide.getByRole('button', {name:'案内を閉じる'}).click();
   await page.waitForTimeout(250);
   assert.equal(await guide.count(),0);
+  assert.equal(await native('アラーム解除').evaluate(e=>getComputedStyle(e).animationName), 'none');
   assert.ok(nonPolling(start).length===0, 'Dismissing guidance cannot operate the machine');
 
   machineState = 'Run'; broadcast(status());

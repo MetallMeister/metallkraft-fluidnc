@@ -36,6 +36,10 @@ test('The published executable contains exactly the existing allowlisted patches
   assert.equal(sha(await readFile('vendor/esp3d-webui-v3.0.10-source.tar.gz')), 'f0bc0d805b192f6f45c970fb29f2348743bb824ec3bf55b02a0d69f27d664ea3');
 });
 
+test('Recovery pulse release keeps the v0.1.2 executable byte-for-byte', async () => {
+  assert.equal(sha(await readFile('install/ui/index.html.gz')), '9e3421905c46389f294f03228c1946a2b1f4ed1b62ea871549f3939cabb96c7d');
+});
+
 test('Public defaults contain no demo macros or controller command overrides', async () => {
   const preferences = JSON.parse(await readFile('install/ui/preferences.json'));
   const settings = preferences.settings;

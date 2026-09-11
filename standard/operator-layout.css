@@ -87,10 +87,28 @@
 .mk-recovery-heading strong { flex: 1; min-width: 0; }
 #mk-recovery-guide .btn-clear { flex: 0 0 28px; width: 28px; height: 28px; min-height: 28px; margin: -3px -3px 0 0; background: transparent !important; box-shadow: none !important; border: 0 !important; }
 #mk-recovery-guide p { margin: 4px 0 0; overflow-wrap: anywhere; }
+/* Only the confirmed next action pulses; labels and hit areas remain steady. */
+@keyframes mk-recovery-action {
+  0%, 100% { outline-color: #1764d8; }
+  50% { outline-color: transparent; }
+}
+@keyframes mk-recovery-guide-edge {
+  0%, 100% { border-left-color: #1764d8; }
+  50% { border-left-color: #adc6e9; }
+}
+#mk-recovery-guide:not([data-next-action=""]) { animation: mk-recovery-guide-edge 1.6s step-end infinite; }
 #dashboard:has(#mk-recovery-guide[data-next-action="reset"]) #statusPanel [data-tooltip="リセット"],
 #dashboard:has(#mk-recovery-guide[data-next-action="unlock"]) #statusPanel [data-tooltip="アラーム解除"],
 #dashboard:has(#mk-recovery-guide[data-next-action="resume"]) #statusPanel [data-tooltip="再開"],
-#dashboard:has(#mk-recovery-guide[data-next-action="home"]) #btnHAll { outline: 3px solid var(--mk-blue); outline-offset: -3px; }
+#dashboard:has(#mk-recovery-guide[data-next-action="home"]) #btnHAll {
+  outline: 3px solid var(--mk-blue); outline-offset: -3px;
+  animation: mk-recovery-action 1.6s step-end infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  #dashboard:has(#mk-recovery-guide) :is(#mk-recovery-guide, #statusPanel .status-buttons-container .btn, #btnHAll) { animation: none; }
+}
+#app .tooltip[data-tooltip="スリープ"] { --mk-help: "作業後の休止用です。送り・主軸・冷却を止め、軸モーターの保持を解除します。Z軸の落下に注意。続きから再開する休憩には「一時停止」を使います。復帰は「リセット」後に原点確認。電源OFFではありません。"; }
+#app #btnEStop { --mk-help: "加工を止めて確認するときに使います。送りを減速停止し、主軸・冷却へ停止指令を送る安全ドア停止です。今の画面では「リセット」で加工中止後に原点を確認します。通信経由のため、物理非常停止の代わりにはなりません。"; }
 @media (min-width: 900px) and (min-height: 768px) {
   #mk-recovery-guide { grid-area: 5 / 1 / 7 / 2; z-index: 11; align-self: stretch; }
   #dashboard:has(#mk-recovery-guide) #metallkraft-news { visibility: hidden; }
