@@ -8,7 +8,7 @@ import { chromium } from 'playwright';
 // This mock serves the distributed files. It never connects to a real controller.
 const commands = [], errors = [];
 const sockets = new Set();
-let machineState = 'Idle', spindleMode = 'M5', macroCount = 0;
+let machineState = 'Idle', spindleMode = 'M5', macroCount = 0, fileStatus = 'Ok';
 const status = () => `<${machineState}|MPos:0.000,0.000,5.000|WCO:0.000,0.000,0.000|FS:0,0|Ov:100,100,100>\n`;
 const modes = () => `[GC:G0 G54 G17 G21 G90 G94 ${spindleMode} M9 T0 F0 S0]\n`;
 const gcode = 'G21 G90\nG0 X0 Y0 Z5\nG1 X40 F200\nG1 Y30\nG1 X0\nG1 Y0\nM30\n';
@@ -32,7 +32,7 @@ const server = createServer(async (req, res) => {
       command(cmd);
       return res.end(cmd === '$/report_inches' ? '$/report_inches=false\n' : '');
     }
-    if (url.pathname === '/files' || url.pathname === '/upload') return json({status:'Ok',path:'/',files:[{name:'example.nc',size:String(Buffer.byteLength(gcode))},{name:'.fseventsd',size:'-1'},{name:'.Spotlight-V100',size:'-1'}],total:'1 GB',used:'1 KB',occupation:'1'});
+    if (url.pathname === '/files' || url.pathname === '/upload') return json({status:fileStatus,path:'/',files:[{name:'example.nc',size:String(Buffer.byteLength(gcode))},{name:'.fseventsd',size:'-1'},{name:'.Spotlight-V100',size:'-1'}],total:'1 GB',used:'1 KB',occupation:'1'});
     if (url.pathname === '/login') return json({status:'Ok',authentication_lvl:'admin'});
     if (url.pathname === '/sd/example.nc') return res.end(gcode);
     const name = url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\/flash\//, '/').slice(1);
@@ -85,6 +85,8 @@ try {
   assert.equal(await page.locator('[id^="mk-demo-"]').count(), 0);
   for (const name of ['.fseventsd','.Spotlight-V100']) assert.equal(await page.getByText(name,{exact:true}).isVisible(), false);
   assert.equal(await page.locator('#mk-start-job').isDisabled(), true);
+  assert.equal(await page.locator('#filesPanel .file-status').isVisible(), false, await page.locator('#filesPanel .file-status').evaluate(e=>e.outerHTML));
+  assert.equal(await page.locator('#filesPanel .files-list-footer').isVisible(), false);
   await page.locator('#filesPanel .file-line-name[role="button"]').first().click();
   await page.waitForFunction(() => !document.querySelector('#mk-start-job').disabled);
   await preview.getByText('/example.nc', {exact:true}).waitFor();
@@ -109,6 +111,7 @@ try {
     near(boxes.zs.x-boxes.xp.right, boxes.xy.width*.5+4, 'Half-button group gap');
     if (width >= 900 && height >= 768) {
       assert.ok(boxes.spindle.y >= boxes.home.bottom+3, 'Home/spindle overlap '+JSON.stringify(boxes));
+      assert.ok(boxes.spindle.y <= boxes.home.bottom+12, 'Unused home/spindle gap '+JSON.stringify(boxes));
       assert.ok(boxes.macros.y >= boxes.speed.bottom+3, 'Spindle/macro overlap '+JSON.stringify(boxes));
       assert.ok(boxes.start.y >= boxes.macros.bottom+3, 'Macro/start overlap '+JSON.stringify(boxes));
       assert.ok(boxes.terminal.y >= boxes.readout.bottom+3, 'Readout/terminal overlap '+JSON.stringify(boxes));
@@ -169,7 +172,87 @@ try {
   await page.waitForFunction(() => document.querySelector('#SpindlePanel fieldset').disabled);
   assert.equal(await stopSpindle.isEnabled(), false);
   assert.equal(await stopSpindle.evaluate(e => getComputedStyle(e).animationName), 'none');
+  for (const id of ['btnStop','btnStopZ']) {
+    const button = page.locator('#'+id);
+    assert.equal(await button.isDisabled(), true);
+    assert.equal(await button.evaluate(e=>getComputedStyle(e).backgroundColor), 'rgb(226, 229, 233)');
+  }
+  const busyStart = commands.length;
+  await page.locator('#btnStop').evaluate(e=>e.click());
+  await page.locator('#btnStopZ').evaluate(e=>e.click());
+  await page.waitForTimeout(250);
+  assert.ok(commands.slice(busyStart).every(cmd=>['?','$G'].includes(cmd)), 'Disabled jog stop must not send commands');
+  await page.screenshot({path:'test-results/processing.png'});
   machineState = 'Idle'; spindleMode = 'M5'; broadcast(status()); broadcast(modes());
+
+  const guide = page.locator('#mk-recovery-guide');
+  const native = label => page.locator('#statusPanel [data-tooltip="'+label+'"]');
+  const nonPolling = start => commands.slice(start).filter(cmd=>!['?','$G','$I','$/report_inches'].includes(cmd));
+  let start = commands.length;
+  await native('スリープ').click();
+  await page.waitForTimeout(250);
+  assert.deepEqual(nonPolling(start), ['$SLP']);
+  machineState = 'Sleep'; broadcast(status());
+  await guide.getByText('スリープから戻すには').waitFor();
+  assert.equal(await native('リセット').evaluate(e=>getComputedStyle(e).outlineStyle), 'solid');
+  await page.screenshot({path:'test-results/recovery-sleep.png'});
+  start = commands.length;
+  await native('リセット').click();
+  await page.waitForTimeout(250);
+  assert.deepEqual(nonPolling(start), ['\x18']);
+  machineState = 'Alarm'; broadcast('ALARM:3\n'); broadcast(status());
+  await guide.getByText('アラーム解除の前に').waitFor();
+  start = commands.length;
+  await native('アラーム解除').click();
+  await page.waitForTimeout(250);
+  assert.deepEqual(nonPolling(start), ['$X']);
+  machineState = 'Idle'; broadcast(status());
+  await guide.getByText('運転を始める前に').waitFor();
+  start = commands.length;
+  await guide.getByRole('button', {name:'案内を閉じる'}).click();
+  await page.waitForTimeout(250);
+  assert.equal(await guide.count(),0);
+  assert.ok(nonPolling(start).length===0, 'Dismissing guidance cannot operate the machine');
+
+  machineState = 'Run'; broadcast(status());
+  start = commands.length;
+  await page.locator('#btnEStop').click();
+  await page.waitForTimeout(250);
+  assert.deepEqual(nonPolling(start), ['\x84'], 'Keep the stock safety-door quick stop');
+  await guide.getByText('停止指令の反映待ち').waitFor();
+  machineState = 'Door:0'; broadcast(status());
+  await guide.getByText('クイック停止・安全扉停止中').waitFor();
+  assert.match(await guide.innerText(),/途中再開ではありません/);
+  for (const [width,height] of [[1440,900],[900,768],[390,844]]) {
+    await page.setViewportSize({width,height}); await page.waitForTimeout(250);
+    const box=await guide.boundingBox();
+    assert.ok(box.y>=0 && box.y+box.height<=height-2, 'Guide stays on screen');
+    assert.ok(await guide.evaluate(e=>e.scrollHeight<=e.clientHeight+1), 'Guide copy fits '+width);
+    assert.ok(await page.locator('#btnEStop').isVisible());
+    if (width >= 900) {
+      const toast = await page.locator('.toasts-container').boundingBox();
+      const files = await page.locator('#filesPanel').boundingBox();
+      assert.ok(toast.x+toast.width <= files.x-4, 'Notifications must not cover file selection');
+    }
+    await page.screenshot({path:'test-results/recovery-'+width+'.png',fullPage:true});
+  }
+  machineState = 'Hold:1'; broadcast(status());
+  await guide.getByText('停止完了を待っています').waitFor();
+  machineState = 'Hold:0'; broadcast(status());
+  await guide.getByText('一時停止中です').waitFor();
+  machineState = 'Jog'; broadcast(status());
+  await page.waitForFunction(()=>!document.querySelector('#btnStopZ').disabled);
+  start=commands.length;
+  await page.locator('#btnStopZ').evaluate(e=>e.click());
+  await page.waitForTimeout(250);
+  assert.deepEqual(nonPolling(start), ['\x85'], 'Native jog-cancel stays available during jogging');
+  machineState='Idle'; spindleMode='M5'; broadcast(status()); broadcast(modes());
+
+  fileStatus='No SD card';
+  await page.reload();
+  await page.locator('#filesPanel .file-status').waitFor({state:'visible'});
+  assert.match(await page.locator('#filesPanel .file-status').innerText(), /SD/);
+  fileStatus='Ok';
 
   for (const count of [5,6,10]) {
     macroCount = count;
@@ -189,7 +272,10 @@ try {
     }
   }
   assert.deepEqual(errors, []);
-  console.log('Release UI passed: responsive spacing, six-macro threshold, native confirmed spindle toggle, unchanged M3/M5 commands, preview and public defaults.');
+  console.log('Release UI passed: responsive layout, disabled jog stops, recovery guidance, native stop/reset/unlock commands, SD error visibility, spindle toggle, six-macro threshold and preview.');
+} catch (error) {
+  console.error({browserErrors:errors});
+  throw error;
 } finally {
   await browser?.close();
   for (const socket of sockets) socket.terminate();

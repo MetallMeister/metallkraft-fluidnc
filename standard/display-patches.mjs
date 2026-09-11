@@ -4,6 +4,7 @@ import { patchFileWorkflow } from './file-workflow-patches.mjs';
 import { patchJogSpeedPresets } from './jog-speed-presets.mjs';
 import { patchOperationStates } from './operation-state-patches.mjs';
 import { patchLiveControls } from './live-controls-patches.mjs';
+import { patchRecoveryUI } from './recovery-patches.mjs';
 import { spindleDisplayValueExpression } from './spindle-readout.mjs';
 export { spindleDisplayValueExpression };
 
@@ -93,5 +94,5 @@ export const fileVisibilityPatch = {
 export function patchStandardUI(html) {
   html = patchLiveUI(html);
   assert.equal(html.split(fileVisibilityPatch.before).length, 2);
-  return html.replace(fileVisibilityPatch.before, fileVisibilityPatch.after);
+  return patchRecoveryUI(html.replace(fileVisibilityPatch.before, fileVisibilityPatch.after));
 }

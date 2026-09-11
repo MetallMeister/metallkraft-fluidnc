@@ -2,8 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { gunzipSync } from 'node:zlib';
+import { gunzipSync, gzipSync } from 'node:zlib';
 import { patchStandardUI } from '../standard/display-patches.mjs';
+import { recoveryPatches } from '../standard/recovery-patches.mjs';
+import { jogStop, guardedJogStop } from '../standard/live-controls-patches.mjs';
 
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const files = ['index.html.gz', 'theme-metallkraft.gz', 'lang-ja.json.gz', 'preferences.json', 'metallkraft-links.html', 'metallkraft-news.html', 'metallkraft-preview.html.gz'];
@@ -24,7 +26,13 @@ test('The published executable contains exactly the existing allowlisted patches
   assert.equal(sha(source), '46f6a276e1c4d17f17cfd6a5c48d44d5cb23ea16ce32e67194ee160951d030fa');
   const actual = gunzipSync(await readFile('install/ui/index.html.gz')).toString();
   assert.equal(actual, patchStandardUI(gunzipSync(source).toString()));
-  assert.equal(sha(await readFile('install/ui/index.html.gz')), '2e54337e171d5cd70a551d6e874a01f20f265f3cc80d2c037b9a7ff9a87b44aa', 'The operator layout update changes no executable JavaScript');
+  let previous = actual;
+  for (const { before, after } of recoveryPatches.toReversed()) {
+    assert.equal(previous.split(after).length, 2);
+    previous = previous.replace(after, () => before);
+  }
+  for (const id of ['btnStop', 'btnStopZ']) previous = previous.replace(guardedJogStop.replace('id:"btnStop"', `id:"${id}"`), () => jogStop.replace('id:"btnStop"', `id:"${id}"`));
+  assert.equal(sha(gzipSync(previous, {level:9})), '2e54337e171d5cd70a551d6e874a01f20f265f3cc80d2c037b9a7ff9a87b44aa', 'Only recovery display, OK visibility and jog-stop availability differ from v0.1.1');
   assert.equal(sha(await readFile('vendor/esp3d-webui-v3.0.10-source.tar.gz')), 'f0bc0d805b192f6f45c970fb29f2348743bb824ec3bf55b02a0d69f27d664ea3');
 });
 

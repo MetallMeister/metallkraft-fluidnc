@@ -2,6 +2,10 @@
 
 [トップへ](../README.md)
 
+## v0.1.1からv0.1.2へ
+
+`index.html.gz`と`theme-metallkraft.gz`の2ファイルをFlash直下へ上書きして再読み込みします。先に現在のファイルをバックアップし、機械と主軸が停止した状態で更新してください。`preferences.json`・YAML・登録マクロは上書きしません。v0.1.0から更新する場合は`lang-ja.json.gz`も更新します。
+
 ## v0.1.0からv0.1.1へ
 
 変更ファイルは`theme-metallkraft.gz`と`lang-ja.json.gz`だけです。この2ファイルをFlash直下へ上書きして再読み込みします。YAML・`preferences.json`・登録マクロ・画面本体のJavaScriptは変更しません。[変更履歴](../CHANGELOG.md)

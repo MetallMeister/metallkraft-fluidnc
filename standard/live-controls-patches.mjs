@@ -19,8 +19,9 @@ for (const { before, after } of workflowPresentationEdits) {
 }
 const jobHook = '(' + transformSync('globalThis.__mkWorkflow=(' + workflow + ')', { minify: true, target: 'es2022' }).code.trim().replace(/^globalThis\.__mkWorkflow=/, '').replace(/;$/, '') + ')';
 const jogStop = '(0,o.tZ)(L.yS,{m1:!0,tooltip:!0,label:(0,S.T)("CN23"),id:"btnStop",icon:(0,o.tZ)("span",{class:"text-error",children:(0,o.tZ)(fe.P,{})}),"data-tooltip":(0,S.T)("CN23"),onClick:e=>{l.Uc.haptic(),e.target.blur();const t=l.Uc.getValue("jogstopcmd");a(t,";")}})';
+const guardedJogStop = jogStop.replace('id:"btnStop",', 'id:"btnStop",disabled:!["Idle","Jog"].includes(mkJogStatus?.state),"data-operation-disabled":!["Idle","Jog"].includes(mkJogStatus?.state)?"":void 0,');
 export const liveControlsPatches = [
-  { before: jogStop, after: jogStop + ',' + jogStop.replace('id:"btnStop"', 'id:"btnStopZ"') },
+  { before: jogStop, after: guardedJogStop + ',' + guardedJogStop.replace('id:"btnStop"', 'id:"btnStopZ"') },
   ...[['xy', ['0_01','50','10','1','0_1']], ['z', ['0_01','25','10','1','0_1']]].flatMap(([axis, values]) => values.map(value => ({
     before: `id:"move_${axis}_${value}",name:`,
     after: `id:"move_${axis}_${value}",disabled:${jogBusy},"data-operation-disabled":${jogBusy}?"":void 0,name:`,
@@ -41,3 +42,4 @@ export function patchLiveControls(html) {
   }
   return html;
 }
+export { jogStop, guardedJogStop };

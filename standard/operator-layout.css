@@ -39,8 +39,15 @@
 #macrosPanel .macro-buttons-panel:empty::after { grid-column: 1 / -1; }
 
 @media (min-width: 900px) and (min-height: 768px) {
-  #dashboard #jogPanel { --jog-cell: min(64px, calc((100dvh - 666px) / 3), calc((max(215px, (100cqw - 24px) / 4.5) - 12px) / 4.5)); }
+  #dashboard {
+    --mk-cell: min(80px, calc((100dvh - 666px) / 3), calc((max(215px, (100cqw - 24px) / 4.5) - 12px) / 4.5));
+    --mk-jog-tail: 248px;
+    --mk-spindle-top: calc(3 * var(--mk-cell) + var(--mk-jog-tail) + 8px);
+    --mk-macro-height: calc(100dvh - 300px - var(--mk-spindle-top));
+  }
+  #dashboard #jogPanel { --jog-cell: var(--mk-cell); }
   #dashboard #filesPanel { padding-bottom: 0; }
+  #dashboard #metallkraft-news { padding-bottom: 0; }
   #dashboard #SpindlePanel .panel-body-dashboard { display: contents; }
   #dashboard #SpindlePanel .status-ctrls {
     grid-area: 4 / 4 / 6 / 5; align-self: start; height: 80px;
@@ -48,23 +55,56 @@
   }
   #dashboard #terminalPanel { margin-top: 88px !important; }
   #dashboard #SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) {
-    grid-area: 2 / 3 / 6 / 4; align-self: end; height: 86px; margin-bottom: 116px;
+    grid-area: 2 / 3 / 6 / 4; align-self: start; height: 86px; margin: var(--mk-spindle-top) 0 0;
   }
   #dashboard #SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) .form-group { margin-top: 6px; }
-  #dashboard #macrosPanel { grid-area: 2 / 3 / 6 / 4; align-self: end; }
+  #dashboard #macrosPanel { grid-area: 2 / 3 / 6 / 4; align-self: end; height: var(--mk-macro-height) !important; }
+  #dashboard #macrosPanel > .panel-body { flex: 1 1 0; max-height: none !important; }
+  #dashboard #macrosPanel .macro-buttons-panel { grid-auto-rows: calc((var(--mk-macro-height) - 32px) / 2); }
+  #dashboard #macrosPanel .macro-buttons-panel button { height: 100%; min-height: 32px; }
 }
 @media (min-width: 900px) and (min-height: 768px) and (max-height: 850px) {
+  #dashboard { --mk-cell: min(64px, calc((100dvh - 640px) / 3), calc((max(215px, (100cqw - 24px) / 4.5) - 12px) / 4.5)); --mk-jog-tail: 240px; }
   #dashboard #jogPanel {
-    --jog-cell: min(64px, calc((100dvh - 640px) / 3), calc((max(215px, (100cqw - 24px) / 4.5) - 12px) / 4.5));
     --jog-rows: repeat(3, var(--jog-cell)) 48px 48px 48px 32px 32px;
   }
   #app #dashboard #jogPanel .jog-buttons-container :is([id^="btn+"], [id^="btn-"])::after { width: 14px; height: 14px; top: 3px; }
   #dashboard #jogPanel .jog-buttons-container :is([id^="btn+"], [id^="btn-"])::before { padding-bottom: 3px; line-height: 18px; }
-  #dashboard #macrosPanel { height: 92px !important; }
   #dashboard #macrosPanel > .navbar { height: 24px; min-height: 24px; }
-  #dashboard #macrosPanel > .panel-body { flex-basis: 68px; max-height: 68px !important; }
-  #dashboard #macrosPanel .macro-buttons-panel button { height: 32px; min-height: 32px; }
-  #dashboard #SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) { margin-bottom: 100px; }
+  #dashboard #macrosPanel .macro-buttons-panel { grid-auto-rows: calc((var(--mk-macro-height) - 28px) / 2); }
+}
+
+#dashboard #jogPanel :is(#btnStop, #btnStopZ):disabled {
+  background: #e2e5e9 !important; color: #89919a !important; border-color: #c7cdd4 !important; cursor: not-allowed;
+}
+#dashboard #jogPanel :is(#btnStop, #btnStopZ):disabled::before { color: #89919a; }
+#filesPanel .file-status:is([data-file-status="S126"], [data-file-status="Ok"], [data-file-status="ok"], [data-file-status="OK"]) { display: none; }
+#filesPanel:not(:has(.file-status:not([data-file-status="S126"]):not([data-file-status="Ok"]):not([data-file-status="ok"]):not([data-file-status="OK"]))) > .files-list-footer { display: none; }
+#filesPanel .file-status { color: #ac2638; white-space: normal; overflow-wrap: anywhere; }
+
+#mk-recovery-guide { border: 1px solid #adc6e9; border-left: 4px solid var(--mk-blue); background: #edf4ff; color: #223b5e; padding: 8px; min-width: 0; font-size: 16px; line-height: 1.35; }
+.mk-recovery-heading { display: flex; align-items: start; gap: 8px; }
+.mk-recovery-heading strong { flex: 1; min-width: 0; }
+#mk-recovery-guide .btn-clear { flex: 0 0 28px; width: 28px; height: 28px; min-height: 28px; margin: -3px -3px 0 0; background: transparent !important; box-shadow: none !important; border: 0 !important; }
+#mk-recovery-guide p { margin: 4px 0 0; overflow-wrap: anywhere; }
+#dashboard:has(#mk-recovery-guide[data-next-action="reset"]) #statusPanel [data-tooltip="リセット"],
+#dashboard:has(#mk-recovery-guide[data-next-action="unlock"]) #statusPanel [data-tooltip="アラーム解除"],
+#dashboard:has(#mk-recovery-guide[data-next-action="resume"]) #statusPanel [data-tooltip="再開"],
+#dashboard:has(#mk-recovery-guide[data-next-action="home"]) #btnHAll { outline: 3px solid var(--mk-blue); outline-offset: -3px; }
+@media (min-width: 900px) and (min-height: 768px) {
+  #mk-recovery-guide { grid-area: 5 / 1 / 7 / 2; z-index: 11; align-self: stretch; }
+  #dashboard:has(#mk-recovery-guide) #metallkraft-news { visibility: hidden; }
+  #dashboard:has(#mk-recovery-guide) #extra_content_metallkraft-news { visibility: hidden; }
+  body:has(#dashboard) .toasts-container { top: 112px; left: 8px; right: auto; width: calc(100vw - 40px - 3 * max(215px, (100vw - 40px) / 4.5)); max-height: calc(100dvh - 310px); overflow-y: auto; }
+  body:has(#dashboard) .toasts-container > .toast { width: 100%; min-width: 0; overflow-wrap: anywhere; }
+}
+@media (min-width: 1200px) and (min-height: 768px) {
+  #dashboard:not(:has(#mk-recovery-guide)) #metallkraft-preview { margin-bottom: -44px !important; }
+  #dashboard #metallkraft-news { height: 132px !important; align-self: end; }
+}
+@media (max-width: 899px), (max-height: 767px) {
+  #mk-recovery-guide { position: fixed; left: 6px; right: 6px; bottom: 96px; z-index: 1002; max-height: 45dvh; overflow-y: auto; }
+  body:has(#dashboard) .toasts-container { top: 104px; left: 6px; right: 6px; max-height: 25dvh; overflow-y: auto; }
 }
 @media (max-width: 899px), (max-height: 767px) {
   #dashboard #SpindlePanel { order: -1; }

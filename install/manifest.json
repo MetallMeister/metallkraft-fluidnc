@@ -1,5 +1,5 @@
 {
-  "version": "0.1.1",
+  "version": "0.1.2",
   "date": "2026-09-11",
   "firmware": "FluidNC v4.0.3 (not included)",
   "webuiBase": "ESP3D-WEBUI v3.0.10",
@@ -7,12 +7,12 @@
   "configStatus": "Initial setup, uncalibrated; homing/limits/probe/spindle disabled",
   "files": {
     "ui/index.html.gz": {
-      "bytes": 113002,
-      "sha256": "2e54337e171d5cd70a551d6e874a01f20f265f3cc80d2c037b9a7ff9a87b44aa"
+      "bytes": 114675,
+      "sha256": "9e3421905c46389f294f03228c1946a2b1f4ed1b62ea871549f3939cabb96c7d"
     },
     "ui/theme-metallkraft.gz": {
-      "bytes": 17985,
-      "sha256": "5d627de105d9a6d4b1ce74c102e8479d65e0efbc36aef2753d163c18eb91206e"
+      "bytes": 18580,
+      "sha256": "c17090e4ca21494ada0b298b3b92e726382b07a88df5d8e4288dab7a5e78a998"
     },
     "ui/lang-ja.json.gz": {
       "bytes": 8785,
