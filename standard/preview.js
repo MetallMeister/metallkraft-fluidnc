@@ -93,6 +93,7 @@ const selectMode = mode => {
   view.setMode(mode);
   modeButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.viewMode === mode)));
   canvas.setAttribute('aria-label', mode === '2d' ? '加工予定経路の2Dプレビュー (XY・真上)' : '加工予定経路の3Dプレビュー');
+  canvas.title = mode === '2d' ? 'ドラッグ: 平行移動 / ホイール: 拡大縮小 / 全体表示: 中央へ戻す' : 'ドラッグ: 回転 / 右ドラッグ・Shift＋ドラッグ: 平行移動 / ホイール: 拡大縮小';
 };
 modeButtons.forEach(button => button.addEventListener('click', () => selectMode(button.dataset.viewMode)));
 selectMode('2d');

@@ -129,6 +129,31 @@ try {
   await page.mouse.move(canvasBox.x+canvasBox.width/2+60,canvasBox.y+canvasBox.height/2+20,{steps:8});
   await page.mouse.up(); await page.waitForTimeout(200);
   assert.notEqual(await preview.locator('#path-canvas').evaluate(e=>e.toDataURL()),canvasBefore,'Existing 3D drag rotates the drawing');
+  const panCheck = async (mode, button='left', shift=false) => {
+    await preview.locator('#view-'+mode).click();
+    await preview.locator('#fit-preview').click();
+    await page.waitForTimeout(200);
+    const position=()=>marker.evaluate(e=>[parseFloat(e.style.left),parseFloat(e.style.top)]);
+    const before=await position(), reported=await marker.getAttribute('data-position');
+    const scale=await preview.locator('#path-canvas').getAttribute('data-pixels-per-mm');
+    const b=await preview.locator('#path-canvas').boundingBox();
+    await page.mouse.move(b.x+b.width/2,b.y+b.height/2);
+    if(shift) await page.keyboard.down('Shift');
+    await page.mouse.down({button});
+    await page.mouse.move(b.x+b.width/2+35,b.y+b.height/2-20,{steps:5});
+    await page.mouse.up({button});
+    if(shift) await page.keyboard.up('Shift');
+    await page.waitForTimeout(200);
+    const after=await position();
+    assert.ok(Math.abs(after[0]-before[0]-35)<1 && Math.abs(after[1]-before[1]+20)<1,'Pan moves tool and path in screen pixels');
+    assert.equal(await marker.getAttribute('data-position'),reported,'Panning never changes work coordinates');
+    assert.equal(await preview.locator('#path-canvas').getAttribute('data-pixels-per-mm'),scale);
+    await preview.locator('#fit-preview').click(); await page.waitForTimeout(200);
+    assert.deepEqual(await position(),before,'Fit restores the unpanned view');
+  };
+  await panCheck('3d','right');
+  await panCheck('3d','left',true);
+  await panCheck('2d');
   await preview.locator('#view-2d').click();
   // Reports only: no actual start, reset or jog is sent to a controller.
   for (const x of [10,20]) {

@@ -112,7 +112,7 @@ export function parseToolpath(text, { maxSegments = 50000, maxLines = 60000, pac
 }
 
 // A sphere-based fit is independent of camera angles, so rotation never zooms.
-export function createPathView(bounds, { width, height, padding = 80, zoom = 1, azimuth = -Math.PI / 3, elevation = Math.PI / 3, includeOrigin = false, mode = '3d' }) {
+export function createPathView(bounds, { width, height, padding = 80, zoom = 1, azimuth = -Math.PI / 3, elevation = Math.PI / 3, includeOrigin = false, mode = '3d', panX = 0, panY = 0 }) {
   const fitted = {
     min: bounds.min.map(v => includeOrigin ? Math.min(0, v) : v),
     max: bounds.max.map(v => includeOrigin ? Math.max(0, v) : v),
@@ -129,7 +129,7 @@ export function createPathView(bounds, { width, height, padding = 80, zoom = 1, 
   const p = new Vector3();
   return { bounds: fitted, pixels, rotation, project: (values, offset = 0) => {
     p.fromArray(values, offset).sub(center).applyQuaternion(rotation);
-    return [width / 2 + p.x * pixels, height / 2 - p.y * pixels];
+    return [width / 2 + p.x * pixels + panX, height / 2 - p.y * pixels + panY];
   } };
 }
 
@@ -139,12 +139,21 @@ export class PathCanvas {
     this.canvas = canvas; this.zoom = 1; this.path = null; this.mode = '3d';
     this.onDraw = onDraw; this.frame = 0;
     this.azimuth = -Math.PI / 3; this.elevation = Math.PI / 3;
+    this.panX = 0; this.panY = 0;
     this.observer = new ResizeObserver(() => this.draw()); this.observer.observe(canvas);
     canvas.addEventListener('wheel', e => { if (!this.path?.bounds) return; e.preventDefault(); this.scale(e.deltaY < 0 ? 1.15 : 1 / 1.15); }, { passive: false });
-    canvas.addEventListener('pointerdown', e => { if (this.mode !== '3d' || e.button !== 0 || this.drag) return; this.drag = { x: e.clientX, y: e.clientY, id: e.pointerId }; canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+    canvas.addEventListener('pointerdown', e => {
+      if (!this.path?.bounds || ![0,1,2].includes(e.button) || this.drag) return;
+      e.preventDefault();
+      this.drag = { x:e.clientX, y:e.clientY, id:e.pointerId, pan:this.mode === '2d' || e.shiftKey || e.button !== 0 };
+      canvas.setPointerCapture(e.pointerId);
+    });
     canvas.addEventListener('pointermove', e => {
       if (!this.drag || e.pointerId !== this.drag.id) return;
-      this.rotate((e.clientX - this.drag.x) * 0.008, (e.clientY - this.drag.y) * 0.008);
+      const dx = e.clientX - this.drag.x, dy = e.clientY - this.drag.y;
+      if (this.drag.pan) this.pan(dx,dy);
+      else this.rotate(dx * 0.008, dy * 0.008);
       this.drag.x = e.clientX; this.drag.y = e.clientY;
     });
     for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, e => { if (e.pointerId === this.drag?.id) this.drag = null; });
@@ -162,8 +171,10 @@ export class PathCanvas {
     const bounds = this.path?.bounds;
     this.fitBounds = bounds && point?.length === 3 && point.every(Number.isFinite)
       ? { min: bounds.min.map((v,i)=>Math.min(v,point[i])), max: bounds.max.map((v,i)=>Math.max(v,point[i])) } : null;
-    this.zoom = 1; this.azimuth = -Math.PI / 3; this.elevation = Math.PI / 3; this.draw();
+    this.zoom = 1; this.panX = 0; this.panY = 0; this.drag = null;
+    this.azimuth = -Math.PI / 3; this.elevation = Math.PI / 3; this.draw();
   }
+  pan(x,y) { if (!Number.isFinite(x) || !Number.isFinite(y)) return; this.panX += x; this.panY += y; this.draw(); }
   rotate(x, y) { if (this.mode !== '3d') return; this.azimuth -= x; this.elevation = Math.max(0.08, Math.min(Math.PI / 2 - 0.03, this.elevation + y)); this.draw(); }
   scale(factor) { this.zoom = Math.min(15, Math.max(0.25, this.zoom * factor)); this.draw(); }
   projectPosition(position) { return this.path?.bounds && this.projection ? this.projection.project(position) : null; }
@@ -181,7 +192,7 @@ export class PathCanvas {
     c.dataset.rendering = 'true';
     // Three.js supplies the 3D view rotation; orthographic Canvas drawing keeps the
     // bundle small enough for DLC32 flash and works without a WebGL context.
-    const projection = createPathView(bounds, { width: w, height: h, padding: this.palette.padding, zoom: this.zoom, azimuth: this.azimuth, elevation: this.elevation, includeOrigin: Boolean(this.palette.origin), mode: this.mode });
+    const projection = createPathView(bounds, { width: w, height: h, padding: this.palette.padding, zoom: this.zoom, azimuth: this.azimuth, elevation: this.elevation, includeOrigin: Boolean(this.palette.origin), mode: this.mode, panX:this.panX, panY:this.panY });
     const { rotation: view, project: xy } = projection;
     this.projection = projection;
     c.dataset.pixelsPerMm = String(projection.pixels);

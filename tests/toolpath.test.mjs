@@ -1,6 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseToolpath, createPathView } from '../src/toolpath.js';
+
+test('Panning translates all projected coordinates without changing scale or model bounds',()=>{
+  const bounds={min:[-10,-20,-3],max:[50,20,5]}, original=structuredClone(bounds);
+  for (const mode of ['2d','3d']) {
+    const options={width:800,height:400,mode};
+    const base=createPathView(bounds,options), moved=createPathView(bounds,{...options,panX:70,panY:-35});
+    assert.equal(base.pixels,moved.pixels);
+    for (const p of [[0,0,0],[10,20,5],[-5,1,2]]) {
+      assert.deepEqual(moved.project(p),base.project(p).map((v,i)=>v+[70,-35][i]));
+      assert.deepEqual(moved.project(new Float64Array([99,99,99,...p]),3),moved.project(p));
+    }
+    assert.deepEqual(bounds,original);
+  }
+});
 import { Preparation } from '../src/workflow.js';
 import { previewLimits } from '../standard/preview-limits.mjs';
 
