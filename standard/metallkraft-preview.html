@@ -86,6 +86,10 @@ html#mk-preview-document, #mk-preview-document body { margin:0 !important; paddi
 </style>
 <style>
 #mk-preview-document :is(#cancel-preview,#zoom-in,#zoom-out) { display:none; }
+#mk-preview-document body { grid-template-rows:36px minmax(60px,1fr) 28px auto auto; }
+#mk-preview-document #preview-footer { display:grid; grid-template-columns:auto minmax(0,1fr); gap:12px; white-space:normal; overflow:visible; align-items:start; }
+#preview-help { border-left:1px solid #364455; padding-left:10px; }
+#preview-help span { display:block; overflow-wrap:anywhere; }
 @media (max-width:500px) {
   #mk-preview-document header { grid-template-columns:minmax(0,1fr) 70px 30px; grid-template-rows:28px; }
   #mk-preview-document #preview-filename { grid-area:1 / 1; }
@@ -111,7 +115,7 @@ html#mk-preview-document, #mk-preview-document body { margin:0 !important; paddi
 <div id="preview-empty"><strong>加工ファイルを選択してください</strong><span>SDカードの一覧でファイルを選ぶと<br>ここに加工予定経路が表示されます</span></div>
 <p id="preview-info" data-state="" role="status"></p>
 <div id="tool-position-readout" title="基板が報告する工具先端の座標です。実測位置ではありません。"><span id="tool-position-state">工具位置: 座標確認待ち</span><span id="tool-position-values"></span></div>
-<footer id="limitations">予定経路 / 衝突判定なし</footer>
+<footer id="preview-footer"><span id="limitations">予定経路 / 衝突判定なし</span><span id="preview-help"><span>2D：ドラッグで移動</span><span>3D：ドラッグで回転</span><span>右／Shift＋ドラッグで移動</span><span>全体表示：中央に戻す</span></span></footer>
 <script>/* PREVIEW_SCRIPT */</script>
 </body>
 </html>
