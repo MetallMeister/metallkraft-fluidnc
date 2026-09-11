@@ -24,6 +24,7 @@ test('The published executable contains exactly the existing allowlisted patches
   assert.equal(sha(source), '46f6a276e1c4d17f17cfd6a5c48d44d5cb23ea16ce32e67194ee160951d030fa');
   const actual = gunzipSync(await readFile('install/ui/index.html.gz')).toString();
   assert.equal(actual, patchStandardUI(gunzipSync(source).toString()));
+  assert.equal(sha(await readFile('install/ui/index.html.gz')), '2e54337e171d5cd70a551d6e874a01f20f265f3cc80d2c037b9a7ff9a87b44aa', 'The operator layout update changes no executable JavaScript');
   assert.equal(sha(await readFile('vendor/esp3d-webui-v3.0.10-source.tar.gz')), 'f0bc0d805b192f6f45c970fb29f2348743bb824ec3bf55b02a0d69f27d664ea3');
 });
 

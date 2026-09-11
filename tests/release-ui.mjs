@@ -8,14 +8,15 @@ import { chromium } from 'playwright';
 // This mock serves the distributed files. It never connects to a real controller.
 const commands = [], errors = [];
 const sockets = new Set();
-const status = '<Idle|MPos:0.000,0.000,5.000|WCO:0.000,0.000,0.000|FS:0,0|Ov:100,100,100>\n';
-const modes = '[GC:G0 G54 G17 G21 G90 G94 M5 M9 T0 F0 S0]\n';
+let machineState = 'Idle', spindleMode = 'M5', macroCount = 0;
+const status = () => `<${machineState}|MPos:0.000,0.000,5.000|WCO:0.000,0.000,0.000|FS:0,0|Ov:100,100,100>\n`;
+const modes = () => `[GC:G0 G54 G17 G21 G90 G94 ${spindleMode} M9 T0 F0 S0]\n`;
 const gcode = 'G21 G90\nG0 X0 Y0 Z5\nG1 X40 F200\nG1 Y30\nG1 X0\nG1 Y0\nM30\n';
 const broadcast = text => { for (const socket of sockets) if (socket.readyState === 1) socket.send(Buffer.from(text)); };
 function command(text) {
   commands.push(text);
-  if (text === '?') return broadcast(status);
-  if (text === '$G') broadcast(modes);
+  if (text === '?') return broadcast(status());
+  if (text === '$G') broadcast(modes());
   if (text === '$I') broadcast('[VER:4.0.3:mock]\n');
   if (text !== '$/report_inches') broadcast('ok\n');
 }
@@ -39,6 +40,11 @@ const server = createServer(async (req, res) => {
     let bytes;
     try { bytes = await readFile('install/ui/' + name); }
     catch { bytes = await readFile('install/ui/' + name + '.gz'); res.setHeader('Content-Encoding', 'gzip'); }
+    if (name === 'preferences.json' && macroCount) {
+      const preferences = JSON.parse(bytes);
+      preferences.settings.macros = Array.from({length:macroCount}, (_,i) => ({id:'layout-test-'+i,name:'確認 '+(i+1),type:'CMD',action:'?'}));
+      bytes = Buffer.from(JSON.stringify(preferences));
+    }
     res.setHeader('Content-Type', extname(name) === '.json' ? 'application/json' : name.startsWith('theme-') ? 'text/css' : 'text/html');
     res.end(bytes);
   } catch { res.writeHead(404).end(); }
@@ -46,8 +52,8 @@ const server = createServer(async (req, res) => {
 const socketServer = createServer();
 const wss = new WebSocketServer({server:socketServer});
 wss.on('connection', socket => {
-  sockets.add(socket); socket.send('currentID:1'); broadcast(status); broadcast(modes);
-  const timer = setInterval(() => { if (socket.readyState === 1) socket.send(Buffer.from(status)); }, 200);
+  sockets.add(socket); socket.send('currentID:1'); broadcast(status()); broadcast(modes());
+  const timer = setInterval(() => { if (socket.readyState === 1) socket.send(Buffer.from(status())); }, 200);
   socket.on('close', () => { clearInterval(timer); sockets.delete(socket); });
   socket.on('message', data => {
     const text = data.toString().trim();
@@ -83,12 +89,38 @@ try {
   await page.waitForFunction(() => !document.querySelector('#mk-start-job').disabled);
   await preview.getByText('/example.nc', {exact:true}).waitFor();
   await page.waitForTimeout(500);
-  for (const [width,height] of [[1440,900],[1366,768],[390,844]]) {
+  const geometry = async (width, height) => {
+    await page.setViewportSize({width,height});
+    await page.waitForTimeout(250);
+    const boxes = await page.evaluate(() => {
+      const rect = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
+      return {
+        xm:rect('[id="btn-X"]'), xp:rect('[id="btn+X"]'), yp:rect('[id="btn+Y"]'), ym:rect('[id="btn-Y"]'), zs:rect('#btnStopZ'), xy:rect('#btnStop'),
+        spindle:rect('#SpindlePanel [data-tooltip="主軸を正転"]'), home:rect('#btnHAll'), speed:rect('#spindlespeedInput'),
+        macros:rect('#macrosPanel'), start:rect('#mk-start-job'), readout:rect('#SpindlePanel .status-ctrls'), terminal:rect('#terminalPanel')
+      };
+    });
+    const near = (a,b,label) => assert.ok(Math.abs(a-b)<1, label+' '+JSON.stringify(boxes));
+    near(boxes.xp.x-boxes.xy.x, boxes.xy.x-boxes.xm.x, 'Symmetric X');
+    near(boxes.xy.y-boxes.yp.y, boxes.ym.y-boxes.xy.y, 'Symmetric Y');
+    near(boxes.xp.x-boxes.xy.x, boxes.xy.y-boxes.yp.y, 'Square cross');
+    near(boxes.xy.width, boxes.xy.height, 'Square buttons');
+    near(boxes.zs.y, boxes.xy.y, 'Aligned Z stop');
+    near(boxes.zs.x-boxes.xp.right, boxes.xy.width*.5+4, 'Half-button group gap');
+    if (width >= 900 && height >= 768) {
+      assert.ok(boxes.spindle.y >= boxes.home.bottom+3, 'Home/spindle overlap '+JSON.stringify(boxes));
+      assert.ok(boxes.macros.y >= boxes.speed.bottom+3, 'Spindle/macro overlap '+JSON.stringify(boxes));
+      assert.ok(boxes.start.y >= boxes.macros.bottom+3, 'Macro/start overlap '+JSON.stringify(boxes));
+      assert.ok(boxes.terminal.y >= boxes.readout.bottom+3, 'Readout/terminal overlap '+JSON.stringify(boxes));
+    }
+  };
+  for (const [width,height] of [[1440,900],[1366,768],[900,768],[1920,1080],[390,844]]) {
     await page.setViewportSize({width,height});
     await page.waitForTimeout(250);
     const layout = await page.evaluate(() => ({width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth,scrollHeight:document.documentElement.scrollHeight}));
     assert.ok(layout.scrollWidth <= width + 1, JSON.stringify(layout));
     if (width >= 1366) assert.ok(layout.scrollHeight <= height + 1, JSON.stringify(layout));
+    await geometry(width, height);
     await page.screenshot({path:'test-results/screen-' + width + '.png',fullPage:true});
   }
   const pixels = await preview.locator('#path-canvas').evaluate(canvas => {
@@ -100,8 +132,64 @@ try {
   });
   assert.ok(pixels > 3, 'Preview contains rendered path pixels');
   assert.ok(commands.every(cmd => ['?', '$G', '$I', '$/report_inches'].includes(cmd)), 'Startup and file selection must not issue motion or start commands: ' + JSON.stringify(commands));
+
+  await page.setViewportSize({width:1440,height:900});
+  const startSpindle = page.locator('#SpindlePanel [data-tooltip="主軸を正転"]');
+  const stopSpindle = page.locator('#SpindlePanel [data-tooltip="主軸を停止"]');
+  assert.equal(await startSpindle.isVisible(), true);
+  assert.equal(await stopSpindle.isVisible(), false);
+  assert.equal((await startSpindle.innerText()).trim(), '主軸開始');
+  assert.equal(await startSpindle.evaluate(e => getComputedStyle(e).backgroundColor), 'rgb(23, 100, 216)');
+  const restingBox = await startSpindle.boundingBox();
+  const sent = commands.length;
+  await startSpindle.click();
+  await page.waitForTimeout(250);
+  assert.deepEqual(commands.slice(sent).filter(cmd => !['?', '$G', '$I', '$/report_inches'].includes(cmd)), ['M3 S1000']);
+  assert.equal(await startSpindle.isVisible(), true, 'No optimistic running indication before controller confirms');
+  spindleMode = 'M3'; broadcast(modes());
+  await stopSpindle.waitFor({state:'visible'});
+  assert.equal(await startSpindle.isVisible(), false);
+  assert.deepEqual(await stopSpindle.boundingBox(), restingBox, 'Start and stop occupy the same footprint');
+  assert.equal(await stopSpindle.evaluate(e => getComputedStyle(e).animationName), 'mk-spindle-running');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  assert.equal(await stopSpindle.evaluate(e => getComputedStyle(e).animationName), 'none');
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.screenshot({path:'test-results/spindle-running.png'});
+  const stopSent = commands.length;
+  await stopSpindle.click();
+  await page.waitForTimeout(250);
+  assert.deepEqual(commands.slice(stopSent).filter(cmd => !['?', '$G', '$I', '$/report_inches'].includes(cmd)), ['M5']);
+  assert.equal(await stopSpindle.isVisible(), true, 'Keep stop visible until confirmed');
+  spindleMode = 'M5'; broadcast(modes());
+  await startSpindle.waitFor({state:'visible'});
+  spindleMode = 'M4'; broadcast(modes());
+  await stopSpindle.waitFor({state:'visible'});
+  assert.equal(await startSpindle.isVisible(), false, 'Reverse operation cannot present a start button');
+  machineState = 'Run'; broadcast(status());
+  await page.waitForFunction(() => document.querySelector('#SpindlePanel fieldset').disabled);
+  assert.equal(await stopSpindle.isEnabled(), false);
+  assert.equal(await stopSpindle.evaluate(e => getComputedStyle(e).animationName), 'none');
+  machineState = 'Idle'; spindleMode = 'M5'; broadcast(status()); broadcast(modes());
+
+  for (const count of [5,6,10]) {
+    macroCount = count;
+    await page.reload();
+    await page.locator('#layout-test-0').waitFor();
+    for (const [width,height] of [[1440,900],[1366,768],[900,768],[390,844]]) {
+      await geometry(width,height);
+      const body = page.locator('#macrosPanel > .panel-body');
+      const overflow = await body.evaluate(e => e.scrollHeight > e.clientHeight+1);
+      assert.equal(overflow, count > 6, 'Macro scroll threshold at '+count+' / '+width);
+    }
+    if (count === 10) {
+      await page.setViewportSize({width:1440,height:900});
+      await page.locator('#layout-test-9').scrollIntoViewIfNeeded();
+      assert.ok(await page.locator('#macrosPanel > .panel-body').evaluate(e => e.scrollTop > 0));
+      await page.screenshot({path:'test-results/macros-10.png'});
+    }
+  }
   assert.deepEqual(errors, []);
-  console.log('Release UI passed: desktop/mobile, preview pixels, public defaults, hidden system folders, and no startup/selection motion.');
+  console.log('Release UI passed: responsive spacing, six-macro threshold, native confirmed spindle toggle, unchanged M3/M5 commands, preview and public defaults.');
 } finally {
   await browser?.close();
   for (const socket of sockets) socket.terminate();

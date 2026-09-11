@@ -15,7 +15,7 @@ await mkdir('dist-standard', { recursive: true });
 const jogUI = patchStandardUI(gunzipSync(original).toString());
 await writeFile('dist-standard/index.html.gz', gzipSync(jogUI, { level: 9 }));
 await writeFile('dist-standard/index.html', jogUI);
-const theme = await readFile('standard/theme-metallkraft.css', 'utf8') + '\n' + await readFile('standard/theme-modern.css', 'utf8');
+const theme = await readFile('standard/theme-metallkraft.css', 'utf8') + '\n' + await readFile('standard/theme-modern.css', 'utf8') + '\n' + await readFile('standard/operator-layout.css', 'utf8');
 const probeIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter">' + icons.ArrowDownToLine[2].map(([tag, attrs]) => `<${tag} ${Object.entries(attrs).map(([k,v]) => `${k}="${v}"`).join(' ')} />`).join('') + '</svg>';
 let themedIcons = theme.replace('__PROBE_ICON__', 'data:image/svg+xml,' + encodeURIComponent(probeIcon));
 for (const [direction, icon] of Object.entries({UP:icons.ArrowUp, DOWN:icons.ArrowDown, LEFT:icons.ArrowLeft, RIGHT:icons.ArrowRight})) {

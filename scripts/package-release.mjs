@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 const files = ['index.html.gz', 'theme-metallkraft.gz', 'lang-ja.json.gz', 'preferences.json', 'metallkraft-links.html', 'metallkraft-news.html', 'metallkraft-preview.html.gz'];
 await mkdir('install/ui', { recursive: true });
 const manifest = {
-  version: '0.1.0',
+  version: JSON.parse(await readFile('package.json')).version,
   date: '2026-09-11',
   firmware: 'FluidNC v4.0.3 (not included)',
   webuiBase: 'ESP3D-WEBUI v3.0.10',

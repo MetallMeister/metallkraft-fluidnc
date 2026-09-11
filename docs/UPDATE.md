@@ -2,6 +2,10 @@
 
 [トップへ](../README.md)
 
+## v0.1.0からv0.1.1へ
+
+変更ファイルは`theme-metallkraft.gz`と`lang-ja.json.gz`だけです。この2ファイルをFlash直下へ上書きして再読み込みします。YAML・`preferences.json`・登録マクロ・画面本体のJavaScriptは変更しません。[変更履歴](../CHANGELOG.md)
+
 ## 画面だけ更新する
 
 1. 機械を停止し、再接続・再読み込みで動く危険がない状態にする。

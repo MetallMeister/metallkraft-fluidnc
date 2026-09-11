@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "date": "2026-09-11",
   "firmware": "FluidNC v4.0.3 (not included)",
   "webuiBase": "ESP3D-WEBUI v3.0.10",
@@ -11,12 +11,12 @@
       "sha256": "2e54337e171d5cd70a551d6e874a01f20f265f3cc80d2c037b9a7ff9a87b44aa"
     },
     "ui/theme-metallkraft.gz": {
-      "bytes": 17465,
-      "sha256": "1ac8b49733e5f74af4ffd1e6b650554dc4ab95f1b5a63f5839ef45444a99b5d8"
+      "bytes": 17985,
+      "sha256": "5d627de105d9a6d4b1ce74c102e8479d65e0efbc36aef2753d163c18eb91206e"
     },
     "ui/lang-ja.json.gz": {
-      "bytes": 8784,
-      "sha256": "79b5c7cf6d727fcb949ade57b93004ac1bd477b6afad1c2a98f4e4e62682beda"
+      "bytes": 8785,
+      "sha256": "62664fc35b691242cfcd7325aafd0ed27c0ee2dbf2287750b6117dce78477e3c"
     },
     "ui/preferences.json": {
       "bytes": 1956,
