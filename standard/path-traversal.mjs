@@ -82,7 +82,7 @@ function continuousDistance(path, from, to) {
 export class PathTraversal {
   constructor() { this.setPath(null); }
   setPath(path, name='') { this.path=path; this.name=name ? '/sd'+name : ''; this.clear(); }
-  clear() { this.ranges=[]; this.previous=null; this.cursor=0; this.active=false; this.percent=null; this.context=null; }
+  clear() { this.ranges=[]; this.previous=null; this.pending=null; this.cursor=0; this.active=false; this.percent=null; this.context=null; }
   accept(line, point, now, context, units=1) {
     const report=parseJobStatus(line)[0];
     if (!report || !this.path?.traversalBounds || !this.name) return {};
@@ -90,16 +90,20 @@ export class PathTraversal {
     if (['Alarm','Check','Home','Jog','Sleep'].includes(report.state) || (report.name && report.name!==this.name)) {
       this.clear(); return {reset:true};
     }
-    if (report.state==='Idle') { this.active=false; this.previous=null; return {}; }
-    if (report.state!=='Run' || report.name!==this.name || report.percent===null) { this.previous=null; return {}; }
+    if (report.state==='Idle') { this.active=false; this.previous=null; this.pending=null; return {}; }
+    if (report.state!=='Run' || report.name!==this.name || report.percent===null) { this.previous=null; this.pending=null; return {}; }
     if (!this.active || report.percent<this.percent || context!==this.context) { this.clear(); reset=true; }
     this.active=true; this.percent=report.percent; this.context=context;
     const feedText=line.match(/\|FS:(\d+(?:\.\d+)?),/)?.[1];
     if (!point?.every(Number.isFinite) || point.length!==3 || !Number.isFinite(now) || feedText===undefined) {
-      this.previous=null; return {reset};
+      this.previous=null; this.pending=null; return {reset};
     }
     const feed=Number(feedText)*units, before=this.previous;
-    if (before && distance(point,before.point)<0.0001) { this.previous={...before,now,feed}; return {reset}; }
+    if (this.pending && distance(point,this.pending.point)<0.0001) {
+      this.previous={...this.pending,now,feed};this.cursor=this.pending.at;this.pending=null;
+      return {reset};
+    }
+    if (before && distance(point,before.point)<0.0001) { this.previous={...before,now,feed}; this.pending=null; return {reset}; }
     const elapsed=before ? now-before.now : Infinity;
     const budget=before ? Math.max(.1,Math.max(feed,before.feed)*elapsed/60000*2+.05) : Infinity;
     const fresh=before && elapsed>0 && elapsed<=1500;
@@ -107,12 +111,16 @@ export class PathTraversal {
     let at=locate(this.path,point,this.cursor,limit);
     // Re-anchor without inventing coverage if no reachable match was found.
     if(at===null && fresh)at=locate(this.path,point,this.cursor);
-    if (at===null) { this.previous=null; return {reset}; }
-    this.previous={at,point,now,feed}; this.cursor=at;
-    if (!before || elapsed<=0 || elapsed>1500 || at<=before.at || this.ranges.length>=4096) return {reset};
+    if (at===null) { this.previous=null; this.pending=null; return {reset}; }
+    const anchor=()=>{this.previous={at,point,now,feed};this.cursor=at;this.pending=null;};
+    if (!before || elapsed<0 || elapsed>1500 || at<=before.at || this.ranges.length>=4096) {anchor();return {reset};}
     const length=continuousDistance(this.path,before.at,at);
+    if(!Number.isFinite(length)){anchor();return {reset};}
     // Allow reporting/acceleration error but not an implausible jump to a later pass.
-    if (length>budget) return {reset};
+    // Arrival timestamps may bunch together. Keep the last accepted anchor until
+    // another moving report validates the bounded interval; never fill by waiting.
+    if (elapsed===0 || length>budget) {this.pending={at,point,now,feed};return {reset};}
+    anchor();
     const range=[before.at,at], last=this.ranges.at(-1);
     if (last && Math.abs(last[1]-range[0])<1e-6) last[1]=range[1]; else this.ranges.push([...range]);
     return {reset,range};

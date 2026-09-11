@@ -1,5 +1,5 @@
 {
-  "version": "0.1.10",
+  "version": "0.1.11",
   "date": "2026-09-11",
   "firmware": "FluidNC v4.0.3 (not included)",
   "webuiBase": "ESP3D-WEBUI v3.0.10",
@@ -31,8 +31,8 @@
       "sha256": "7163cfcaab97e99752154f8ac575b6a7c5d9ec390759143ccd1d3c2a1f6b85f7"
     },
     "ui/metallkraft-preview.html.gz": {
-      "bytes": 26206,
-      "sha256": "9119ac7b249f145a65a7277565ce2290366bfe102dd349d989991be12dbed03a"
+      "bytes": 26275,
+      "sha256": "043243bf6d3cca880a4b15289c50177d9325943408fa7d219b53abca9e40a60b"
     },
     "boards/mks-dlc32-max-v1.0/config.yaml": {
       "bytes": 2307,

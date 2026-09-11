@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseToolpath } from '../src/toolpath.js';
-import { PathTraversal, createTraversalIndex } from '../standard/path-traversal.mjs';
+import { PathTraversal, createTraversalIndex, segmentPoint } from '../standard/path-traversal.mjs';
 
 const pathFor = body => {
   const path=parseToolpath('G21 G90 G17 G54\nG0 X0 Y0 Z0\n'+body,{packed:true});
@@ -95,6 +95,43 @@ test('Reachable overlapping candidates and stale anchors remain ambiguous',()=>{
   for(const delay of [200,2000]) {
     const t=setup(body);accept(t,[0,9,0],0);
     accept(t,[.5,10,0],delay);
+    assert.deepEqual(t.ranges,[]);
+  }
+});
+
+test('Burst-delivered positions do not permanently skip a continuous traversed interval',()=>{
+  const t=setup('G1 X100');
+  accept(t,[0,0,0],0);
+  accept(t,[4,0,0],1);
+  assert.deepEqual(t.ranges,[],'A short arrival interval alone is not enough evidence');
+  accept(t,[6,0,0],400);
+  assert.deepEqual(t.ranges,[[0,.06]],'The next moving report validates the whole bounded interval');
+});
+
+test('Equal arrival times can be resolved by a later moving report',()=>{
+  const t=setup('G1 X100');
+  accept(t,[0,0,0],0);accept(t,[2,0,0],0);accept(t,[4,0,0],250);
+  assert.deepEqual(t.ranges,[[0,.04]]);
+});
+
+test('Batched arc positions recover the curved interval rather than a straight shortcut',()=>{
+  const t=setup('G3 X10 Y10 I0 J10');
+  accept(t,segmentPoint(t.path,1,0),0);
+  accept(t,segmentPoint(t.path,4,0),1);
+  assert.deepEqual(t.ranges,[]);
+  accept(t,segmentPoint(t.path,8,0),500);
+  assert.ok(Math.abs(t.ranges[0][0]-1)<1e-6);
+  assert.ok(Math.abs(t.ranges[0][1]-8)<1e-6);
+});
+
+test('Pending timing gaps are not filled by waiting stationary, pausing or stale reports',()=>{
+  for(const next of [
+    t=>accept(t,[4,0,0],400),
+    t=>{accept(t,[4,0,0],100,{state:'Hold:0'});accept(t,[6,0,0],400);},
+    t=>accept(t,[6,0,0],2000),
+    t=>{accept(t,null,100);accept(t,[6,0,0],400);},
+  ]) {
+    const t=setup('G1 X100');accept(t,[0,0,0],0);accept(t,[4,0,0],1);next(t);
     assert.deepEqual(t.ranges,[]);
   }
 });
