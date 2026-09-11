@@ -6,6 +6,8 @@
 
 **[一式をダウンロード（ZIP）](https://github.com/MetallMeister/metallkraft-fluidnc/archive/refs/heads/main.zip)** · **[はじめての導入手順](docs/INSTALL.md)** · **[更新・元に戻す](docs/UPDATE.md)**
 
+利用前に[免責事項・安全上の注意](docs/DISCLAIMER.md)を確認してください。本ソフトウェアは適用法令で認められる範囲で無保証です。クイック停止は物理的な非常停止の代わりにはなりません。
+
 ![MetallKraftの操作画面。実機ではなく表示確認用データです。](docs/screen.png)
 
 ## 自分のボードで使う
