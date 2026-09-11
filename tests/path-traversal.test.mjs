@@ -78,3 +78,23 @@ test('A large indexed file can anchor late without filling earlier segments',()=
   assert.ok(t.ranges[0][0]>19000);
   assert.ok(t.path.traversalBounds.byteLength<4000);
 });
+
+test('An anchored pass remains traceable when a distant later pass overlaps it',()=>{
+  const t=setup('G1 X0 Y10\nX100\nY0\nX10\nY10\nX100');
+  accept(t,[0,9,0],0);
+  accept(t,[2,10,0],200);
+  const update=accept(t,[12,10,0],700);
+  assert.ok(update.range,'The later identical segment is outside the reachable distance');
+  assert.ok(Math.abs(update.range[1]-1.12)<1e-6);
+  assert.equal(t.ranges.length,1);
+  assert.ok(t.ranges[0][1]<2,'No later pass is marked');
+});
+
+test('Reachable overlapping candidates and stale anchors remain ambiguous',()=>{
+  const body='G1 Y10\nX1\nX0\nX1';
+  for(const delay of [200,2000]) {
+    const t=setup(body);accept(t,[0,9,0],0);
+    accept(t,[.5,10,0],delay);
+    assert.deepEqual(t.ranges,[]);
+  }
+});

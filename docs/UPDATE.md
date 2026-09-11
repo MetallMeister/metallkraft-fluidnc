@@ -2,6 +2,10 @@
 
 [トップへ](../README.md)
 
+## v0.1.9からv0.1.10へ
+
+停止・バックアップ後に`metallkraft-preview.html.gz`のみ上書きし、画面を再読み込みします。通過推定の改善であり、制御・通信・YAML・登録マクロは変更しません。
+
 ## v0.1.8からv0.1.9へ
 
 機械と主軸を停止し、バックアップ後に`index.html.gz`と`theme-metallkraft.gz`をFlash直下へ上書きして再読み込みします。YAML・`preferences.json`・登録マクロ・SDカードの内容は上書きしません。

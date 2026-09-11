@@ -28,20 +28,20 @@ export function createTraversalIndex(path) {
   return bounds;
 }
 
-function locate(path, point, cursor) {
+function locate(path, point, cursor, limit=Infinity) {
   const bounds = path.traversalBounds;
   let best = null, squared = Infinity, ambiguous = false, checked = 0;
-  for (let block = Math.floor(cursor / blockSize); block < bounds.length / 6; block++) {
+  for (let block = Math.floor(cursor / blockSize); block < bounds.length / 6 && block*blockSize<=limit; block++) {
     const offset = block * 6;
     if (point.some((v,k)=>v < bounds[offset+k]-tolerance || v > bounds[offset+3+k]+tolerance)) continue;
-    for (let i = Math.max(Math.floor(cursor),block*blockSize); i < Math.min(count(path),(block+1)*blockSize); i++) {
+    for (let i = Math.max(Math.floor(cursor),block*blockSize); i < Math.min(count(path),(block+1)*blockSize) && i<=limit; i++) {
       if (++checked > maxChecks) return null;
       const a = segmentPoint(path,i,0), b = segmentPoint(path,i,1), d = b.map((v,k)=>v-a[k]);
       const length2 = d.reduce((sum,v)=>sum+v*v,0);
       if (!length2) continue;
       const t = Math.max(0, Math.min(1, d.reduce((sum,v,k)=>sum+v*(point[k]-a[k]),0) / length2));
       const progress = i+t;
-      if (progress < cursor-1e-6) continue;
+      if (progress < cursor-1e-6 || progress>limit+1e-6) continue;
       const error = point.reduce((sum,v,k)=>sum+(v-a[k]-d[k]*t)**2,0);
       if (error > tolerance*tolerance) continue;
       if (error < squared-1e-8) { squared=error; best=progress; ambiguous=false; }
@@ -49,6 +49,21 @@ function locate(path, point, cursor) {
     }
   }
   return ambiguous ? null : best;
+}
+
+// Once anchored, a distant future pass must not make the current pass ambiguous.
+// Stop at a discontinuity or work limit; neither is evidence of traversal.
+function reachableLimit(path, from, budget) {
+  let previous=null, checked=0;
+  for(let i=Math.floor(from);i<count(path);i++) {
+    if(++checked>maxChecks)return i;
+    const t=Math.max(0,from-i),a=segmentPoint(path,i,t),b=segmentPoint(path,i,1);
+    if(previous && distance(previous,a)>0.0001)return i;
+    const length=distance(a,b);
+    if(length>budget)return i+t+(1-t)*budget/length;
+    budget-=length;previous=b;
+  }
+  return count(path);
 }
 
 function continuousDistance(path, from, to) {
@@ -85,14 +100,19 @@ export class PathTraversal {
     }
     const feed=Number(feedText)*units, before=this.previous;
     if (before && distance(point,before.point)<0.0001) { this.previous={...before,now,feed}; return {reset}; }
-    const at=locate(this.path,point,this.cursor);
+    const elapsed=before ? now-before.now : Infinity;
+    const budget=before ? Math.max(.1,Math.max(feed,before.feed)*elapsed/60000*2+.05) : Infinity;
+    const fresh=before && elapsed>0 && elapsed<=1500;
+    const limit=fresh ? reachableLimit(this.path,before.at,budget) : Infinity;
+    let at=locate(this.path,point,this.cursor,limit);
+    // Re-anchor without inventing coverage if no reachable match was found.
+    if(at===null && fresh)at=locate(this.path,point,this.cursor);
     if (at===null) { this.previous=null; return {reset}; }
     this.previous={at,point,now,feed}; this.cursor=at;
-    const elapsed=before ? now-before.now : Infinity;
     if (!before || elapsed<=0 || elapsed>1500 || at<=before.at || this.ranges.length>=4096) return {reset};
     const length=continuousDistance(this.path,before.at,at);
     // Allow reporting/acceleration error but not an implausible jump to a later pass.
-    if (length>Math.max(.1,Math.max(feed,before.feed)*elapsed/60000*2+.05)) return {reset};
+    if (length>budget) return {reset};
     const range=[before.at,at], last=this.ranges.at(-1);
     if (last && Math.abs(last[1]-range[0])<1e-6) last[1]=range[1]; else this.ranges.push([...range]);
     return {reset,range};
