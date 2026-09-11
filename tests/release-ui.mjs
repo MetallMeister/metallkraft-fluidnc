@@ -10,7 +10,8 @@ const commands = [], errors = [];
 const sockets = new Set();
 let machineState = 'Idle', spindleMode = 'M5', macroCount = 0, fileStatus = 'Ok';
 let machinePosition = '0.000,0.000,5.000';
-const status = () => `<${machineState}|MPos:${machinePosition}|WCO:0.000,0.000,0.000|FS:0,0|Ov:100,100,100>\n`;
+let reportedFeed=0, sdReport='';
+const status = () => `<${machineState}|MPos:${machinePosition}|WCO:0.000,0.000,0.000|FS:${reportedFeed},0|Ov:100,100,100${sdReport}>\n`;
 const modes = () => `[GC:G0 G54 G17 G21 G90 G94 ${spindleMode} M9 T0 F0 S0]\n`;
 const gcode = 'G21 G90\nG0 X0 Y0 Z5\nG1 X40 F200\nG1 Y30\nG1 X0\nG1 Y0\nM30\n';
 const broadcast = text => { for (const socket of sockets) if (socket.readyState === 1) socket.send(Buffer.from(text)); };
@@ -114,10 +115,21 @@ try {
   await expectPosition('0,0,5');
   const markerShape = await marker.evaluate(e => {
     const r=e.getBoundingClientRect(), parent=e.parentElement.getBoundingClientRect();
-    return {width:r.width,height:r.height,tip:r.bottom-parent.top,anchor:parseFloat(e.style.top)};
+    return {width:r.width,height:r.height,tip:(r.top+r.bottom)/2-parent.top,anchor:parseFloat(e.style.top)};
   });
-  assert.ok(markerShape.height > markerShape.width*2, 'Tool is a vertical bar');
-  assert.ok(Math.abs(markerShape.tip-markerShape.anchor)<1, 'Bar bottom anchors the reported position');
+  assert.equal(markerShape.height,markerShape.width, 'Tool is a blue point');
+  assert.ok(Math.abs(markerShape.tip-markerShape.anchor)<1, 'Point center anchors the reported position');
+  for (const id of ['zoom-in','zoom-out','cancel-preview']) assert.equal(await preview.locator('#'+id).isVisible(),false);
+  await preview.locator('#view-3d').click();
+  await page.waitForTimeout(200);
+  const canvasBefore=await preview.locator('#path-canvas').evaluate(e=>e.toDataURL());
+  const canvasBox=await preview.locator('#path-canvas').boundingBox();
+  await page.mouse.move(canvasBox.x+canvasBox.width/2,canvasBox.y+canvasBox.height/2);
+  await page.mouse.down();
+  await page.mouse.move(canvasBox.x+canvasBox.width/2+60,canvasBox.y+canvasBox.height/2+20,{steps:8});
+  await page.mouse.up(); await page.waitForTimeout(200);
+  assert.notEqual(await preview.locator('#path-canvas').evaluate(e=>e.toDataURL()),canvasBefore,'Existing 3D drag rotates the drawing');
+  await preview.locator('#view-2d').click();
   // Reports only: no actual start, reset or jog is sent to a controller.
   for (const x of [10,20]) {
     machineState='Run'; machinePosition=`${x},0,5`; broadcast(status());
@@ -350,6 +362,45 @@ try {
       await page.screenshot({path:'test-results/macros-10.png'});
     }
   }
+  const input=page.locator('#terminalPanel input.form-input');
+  const send=page.locator('#terminalPanel .input-group button');
+  for (const state of ['Run','Hold:0','Door:0','Home','Jog','Sleep']) {
+    machineState=state; broadcast(status());
+    await page.waitForFunction(()=>document.querySelector('#layout-test-0')?.disabled && document.querySelector('#terminalPanel input')?.disabled);
+    assert.equal(await send.isDisabled(),true);
+    const before=commands.length;
+    await page.locator('#layout-test-0').evaluate(e=>e.click());
+    await send.evaluate(e=>e.click());
+    await page.waitForTimeout(80);
+    assert.deepEqual(nonPolling(before),[],'Locked macro and send must not issue commands');
+    assert.equal(await send.evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(226, 229, 233)');
+  }
+  machineState='Idle'; broadcast(status());
+  await page.waitForFunction(()=>!document.querySelector('#layout-test-0').disabled);
+  assert.equal(await input.isDisabled(),false);
+  await input.fill('G4 P0');
+  let before=commands.length; await input.press('Enter');
+  await page.waitForTimeout(150);
+  assert.deepEqual(nonPolling(before),['G4 P0'],'Idle Enter uses the original sender');
+
+  await reselectFile();
+  await page.locator('#mk-start-job').click();
+  await page.waitForTimeout(200);
+  machineState='Run'; reportedFeed=1000; sdReport='|SD:50,/sd/example.nc';
+  for (const x of [2,4,6]) {
+    machinePosition=`${x},0,5`; broadcast(status()); await page.waitForTimeout(250);
+  }
+  const trace=preview.locator('#traversed-path');
+  assert.ok(Number(await trace.getAttribute('data-ranges'))>0,'Native SD reports produce traversed ranges');
+  const grayPixels=await trace.evaluate(e=>{
+    const data=e.getContext('2d').getImageData(0,0,e.width,e.height).data;
+    let count=0;for(let i=0;i<data.length;i+=4) if(data[i]===128&&data[i+1]===128&&data[i+2]===128&&data[i+3]>0)count++;
+    return count;
+  });
+  assert.ok(grayPixels>10,'Traversed path is visibly gray, not just computed');
+  await expectPosition('6,0,5');
+  await page.screenshot({path:'test-results/traversed.png'});
+  machineState='Idle'; reportedFeed=0; sdReport=''; broadcast(status());
   assert.deepEqual(errors, []);
   console.log('Release UI passed: responsive layout, disabled jog stops, recovery guidance, native stop/reset/unlock commands, SD error visibility, spindle toggle, six-macro threshold and preview.');
 } catch (error) {

@@ -111,6 +111,23 @@
 #app .tooltip[data-tooltip="スリープ"] { --mk-help: "作業後の休止用です。送り・主軸・冷却を止め、軸モーターの保持を解除します。Z軸の落下に注意。続きから再開する休憩には「一時停止」を使います。復帰は「リセット」後に原点確認。電源OFFではありません。"; }
 #app #btnEStop { --mk-help: "加工を止めて確認するときに使います。送りを減速停止し、主軸・冷却へ停止指令を送る安全ドア停止です。今の画面では「リセット」で加工中止後に原点を確認します。通信経由のため、物理非常停止の代わりにはなりません。"; }
 
+/* One disclosure style, with the probe retaining its full-height hit area. */
+#dashboard :is(.mk-parameters > summary, .mk-file-management > summary, .panel-dashboard > .navbar .dropdown-toggle) {
+  box-sizing:border-box; width:36px; min-width:36px; padding:0 !important; margin:0 !important;
+  display:flex; align-items:center; justify-content:center;
+  background:#f6f8fb !important; color:#51657e !important; border:1px solid #dbe2eb !important;
+  border-radius:4px !important; box-shadow:none !important; font-size:0; list-style:none;
+}
+#dashboard :is(.mk-parameters > summary, .mk-file-management > summary, .panel-dashboard > .navbar .dropdown-toggle)::after {
+  content:"▾"; font-size:20px; margin:0; border:0; width:auto; height:auto; transform:none;
+}
+#dashboard :is(.mk-parameters[open] > summary, .mk-file-management[open] > summary)::after { content:"▴"; }
+#dashboard .panel-dashboard > .navbar .dropdown-toggle > * { display:none; }
+#dashboard :is(#macrosPanel button, #terminalPanel input, #terminalPanel button):disabled {
+  background:#e2e5e9 !important; color:#89919a !important; border-color:#c7cdd4 !important;
+  opacity:1; cursor:not-allowed; filter:none; transition:none;
+}
+
 /* Functional bands keep the existing controls and native disabled fieldsets. */
 #dashboard #statusPanel .status-buttons-container { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 #dashboard #statusPanel .status-buttons-container [data-tooltip="スリープ"] { display: none; }

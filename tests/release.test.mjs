@@ -6,6 +6,7 @@ import { gunzipSync, gzipSync } from 'node:zlib';
 import { patchStandardUI } from '../standard/display-patches.mjs';
 import { recoveryPatches } from '../standard/recovery-patches.mjs';
 import { jogStop, guardedJogStop } from '../standard/live-controls-patches.mjs';
+import { manualInputPatches } from '../standard/manual-input-patches.mjs';
 
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const files = ['index.html.gz', 'theme-metallkraft.gz', 'lang-ja.json.gz', 'preferences.json', 'metallkraft-links.html', 'metallkraft-news.html', 'metallkraft-preview.html.gz'];
@@ -27,6 +28,10 @@ test('The published executable contains exactly the existing allowlisted patches
   const actual = gunzipSync(await readFile('install/ui/index.html.gz')).toString();
   assert.equal(actual, patchStandardUI(gunzipSync(source).toString()));
   let previous = actual;
+  for (const {before,after} of manualInputPatches.toReversed()) {
+    assert.equal(previous.split(after).length,2);
+    previous=previous.replace(after,()=>before);
+  }
   for (const { before, after } of recoveryPatches.toReversed()) {
     assert.equal(previous.split(after).length, 2);
     previous = previous.replace(after, () => before);
@@ -36,8 +41,10 @@ test('The published executable contains exactly the existing allowlisted patches
   assert.equal(sha(await readFile('vendor/esp3d-webui-v3.0.10-source.tar.gz')), 'f0bc0d805b192f6f45c970fb29f2348743bb824ec3bf55b02a0d69f27d664ea3');
 });
 
-test('Recovery pulse release keeps the v0.1.2 executable byte-for-byte', async () => {
-  assert.equal(sha(await readFile('install/ui/index.html.gz')), '9e3421905c46389f294f03228c1946a2b1f4ed1b62ea871549f3939cabb96c7d');
+test('Only native input availability differs from the v0.1.5 executable', async () => {
+  let html=gunzipSync(await readFile('install/ui/index.html.gz')).toString();
+  for (const {before,after} of manualInputPatches.toReversed()) html=html.replace(after,()=>before);
+  assert.equal(sha(gzipSync(html,{level:9})), '9e3421905c46389f294f03228c1946a2b1f4ed1b62ea871549f3939cabb96c7d');
 });
 
 test('Public defaults contain no demo macros or controller command overrides', async () => {

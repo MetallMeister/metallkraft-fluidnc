@@ -30,7 +30,7 @@ const updateMarker = () => {
   if (loaded && !pathWcs) pathWcs = loaded.wcs || position.wcs;
   const point = position.position(loaded ? pathWcs : position.wcs, performance.now());
   const screen = point && view.projectPosition(point);
-  marker.hidden = !screen || screen[0] < 7 || screen[1] < 30 || screen[0] > canvas.clientWidth - 7 || screen[1] > canvas.clientHeight - 2;
+  marker.hidden = !screen || screen[0] < 7 || screen[1] < 7 || screen[0] > canvas.clientWidth - 7 || screen[1] > canvas.clientHeight - 7;
   positionReadout.dataset.available = String(Boolean(point));
   positionValues.textContent = point ? point.map((v,i)=>`${'XYZ'[i]} ${v.toFixed(3)}`).join(' / ') + ' mm' : '';
   positionState.textContent = !point ? '工具位置: 座標確認待ち' : marker.hidden ? '工具位置: 表示範囲外（全体表示で確認）' : '工具位置（作業座標）';
@@ -144,7 +144,7 @@ async function loadFile(file, selectionId = null) {
       info.textContent = '経路を描画中…';
       view.setPath(data);
       document.querySelector('#limitations').textContent = remoteId === null ? 'PCプレビュー / 衝突判定なし' : '白: 予定 / 灰: 通過推定';
-      document.querySelector('#limitations').title = data.notice + ' 黄色はファイル原点。青い棒の下端は同じワーク座標系での工具位置（基板報告値、実測値ではありません）。灰色は連続した報告座標と経路を照合した通過推定です。通信の空白・重複経路・照合できない区間は白のまま残し、完了を保証しません。';
+      document.querySelector('#limitations').title = data.notice + ' 黄色はファイル原点。青い点は同じワーク座標系での工具位置（基板報告値、実測値ではありません）。灰色は連続した報告座標と経路を照合した通過推定です。通信の空白・重複経路・照合できない区間は白のまま残し、完了を保証しません。';
     };
     worker.onerror = () => { if (job === generation) fail('経路を表示できません。CAMで確認してください。'); };
     timeout = setTimeout(() => { if (job === generation) fail('解析が30秒を超えたため中止しました。'); }, previewLimits.timeoutMs);

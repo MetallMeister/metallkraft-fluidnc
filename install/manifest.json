@@ -1,5 +1,5 @@
 {
-  "version": "0.1.5",
+  "version": "0.1.6",
   "date": "2026-09-11",
   "firmware": "FluidNC v4.0.3 (not included)",
   "webuiBase": "ESP3D-WEBUI v3.0.10",
@@ -7,12 +7,12 @@
   "configStatus": "Initial setup, uncalibrated; homing/limits/probe/spindle disabled",
   "files": {
     "ui/index.html.gz": {
-      "bytes": 114675,
-      "sha256": "9e3421905c46389f294f03228c1946a2b1f4ed1b62ea871549f3939cabb96c7d"
+      "bytes": 114746,
+      "sha256": "e81ea54688cda5fcc9d87e372a4d25d1642adb0593d0e460924da69afca6af31"
     },
     "ui/theme-metallkraft.gz": {
-      "bytes": 19470,
-      "sha256": "c0fd14c2fe12bdb33eab70e0eb2bca009aad87f05b7570299d9f64a92609ce40"
+      "bytes": 19612,
+      "sha256": "1bbcfca351d5ad3e4dcb71fb63020cfaadd96424ffb6b35a6c392dceed82712c"
     },
     "ui/lang-ja.json.gz": {
       "bytes": 8785,
@@ -31,8 +31,8 @@
       "sha256": "7163cfcaab97e99752154f8ac575b6a7c5d9ec390759143ccd1d3c2a1f6b85f7"
     },
     "ui/metallkraft-preview.html.gz": {
-      "bytes": 25575,
-      "sha256": "29304651ae7c3cdb29688cddc91d4ee2f9b245acc4a43758e891a6c0cc0941c6"
+      "bytes": 25631,
+      "sha256": "a042c201737899c38c87fed73ef3a67354e6c87091b94b1b00a036de8a7f23a8"
     },
     "boards/mks-dlc32-max-v1.0/config.yaml": {
       "bytes": 2307,

@@ -29,7 +29,7 @@ export class TraversalCanvas {
     while (this.queue.length) {
       const range=this.queue[0], i=Math.floor(range[0]);
       const rapid=path.positions ? path.rapids[i] : path.segments[i].rapid;
-      ctx.strokeStyle='#a6a6a6'; ctx.lineWidth=rapid ? 1.5 : 2.2; ctx.setLineDash(rapid ? [5,4] : []);
+      ctx.strokeStyle='#808080'; ctx.lineWidth=rapid ? 1.5 : 2.2; ctx.setLineDash(rapid ? [5,4] : []);
       ctx.beginPath();
       ctx.moveTo(...this.view.projectPosition(segmentPoint(path,i,range[0]-i)));
       const end=Math.min(i+1,range[1]);

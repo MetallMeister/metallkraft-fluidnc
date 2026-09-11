@@ -54,8 +54,9 @@ html#mk-preview-document, #mk-preview-document body { margin:0 !important; paddi
 #path-surface { position:relative; min-height:0; overflow:hidden; }
 #mk-preview-document #traversed-path { position:absolute; inset:0; pointer-events:none; }
 #mk-preview-document #traversed-path[hidden] { display:none; }
-#tool-marker { position:absolute; box-sizing:border-box; width:10px; height:28px; border:1px solid #99caff; border-bottom:2px solid #fff; border-radius:2px 2px 0 0; background:#2787ff; box-shadow:0 0 0 1px #080808; transform:translate(-50%,-100%); pointer-events:none; }
+#tool-marker { position:absolute; box-sizing:border-box; width:10px; height:10px; border:1px solid #99caff; border-radius:50%; background:#2787ff; box-shadow:0 0 0 1px #080808; transform:translate(-50%,-50%); pointer-events:none; }
 #tool-marker[hidden] { display:none; }
+#mk-preview-document #tool-marker { z-index:2; }
 #mk-preview-document #preview-info, #mk-preview-document footer { margin:0; padding:3px 7px; font-size:16px; line-height:22px; }
 #preview-empty { display:none; padding:8px 12px; align-items:center; justify-content:center; flex-direction:column; gap:4px; text-align:center; pointer-events:none; background:#080808; }
 #preview-empty strong { font-size:22px; line-height:1.5; font-weight:600; }
@@ -81,6 +82,15 @@ html#mk-preview-document, #mk-preview-document body { margin:0 !important; paddi
   #mk-preview-document #preview-filename { grid-area:1 / 1 / 2 / 6; }
   #mk-preview-document #preview-view-mode { grid-area:2 / 1; }
   #mk-preview-document #cancel-preview { grid-area:2 / 2; }#mk-preview-document #zoom-out { grid-area:2 / 3; }#mk-preview-document #zoom-in { grid-area:2 / 4; }#mk-preview-document #fit-preview { grid-area:2 / 5; }
+}
+</style>
+<style>
+#mk-preview-document :is(#cancel-preview,#zoom-in,#zoom-out) { display:none; }
+@media (max-width:500px) {
+  #mk-preview-document header { grid-template-columns:minmax(0,1fr) 70px 30px; grid-template-rows:28px; }
+  #mk-preview-document #preview-filename { grid-area:1 / 1; }
+  #mk-preview-document #preview-view-mode { grid-area:1 / 2; }
+  #mk-preview-document #fit-preview { grid-area:1 / 3; }
 }
 </style>
 <body>
