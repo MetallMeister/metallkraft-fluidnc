@@ -2,6 +2,10 @@
 
 [トップへ](../README.md)
 
+## v0.1.4からv0.1.5へ
+
+`theme-metallkraft.gz`と`metallkraft-preview.html.gz`の2ファイルだけを更新します。現在のファイルをバックアップし、機械と主軸が停止した状態でFlash直下へ上書きして再読み込みします。標準画面本体・YAML・`preferences.json`・登録マクロは上書きしません。
+
 ## v0.1.3からv0.1.4へ
 
 変更は`theme-metallkraft.gz`だけです。現在のファイルをバックアップし、機械と主軸が停止した状態でFlash直下へ上書きして再読み込みします。画面JavaScript・YAML・登録マクロは変更しません。

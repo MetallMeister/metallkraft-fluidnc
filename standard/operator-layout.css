@@ -12,7 +12,7 @@
 #dashboard #SpindlePanel button:is([data-tooltip="主軸を正転"], [data-tooltip="主軸を停止"]) label { font-size: 18px; font-weight: 650; }
 @keyframes mk-spindle-running { 0%,100% { filter: brightness(1); } 50% { filter: brightness(.65); } }
 #SpindlePanel fieldset:has(:is([data-tooltip="主軸を正転"], [data-tooltip="主軸を逆転"]).btn-primary) button[data-tooltip="主軸を停止"] {
-  animation: mk-spindle-running 1.4s ease-in-out infinite;
+  animation: mk-spindle-running 1.6s ease-in-out infinite;
 }
 #dashboard #SpindlePanel fieldset:disabled button:is([data-tooltip="主軸を正転"], [data-tooltip="主軸を停止"]) {
   animation: none; filter: none; background: #e2e5e9 !important; color: #89919a !important; border-color: #c7cdd4 !important;
@@ -89,20 +89,21 @@
 #mk-recovery-guide p { margin: 4px 0 0; overflow-wrap: anywhere; }
 /* Only the confirmed next action pulses; labels and hit areas remain steady. */
 @keyframes mk-recovery-action {
-  0%, 100% { outline-color: #1764d8; }
-  50% { outline-color: transparent; }
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(.82); }
 }
 @keyframes mk-recovery-guide-edge {
   0%, 100% { border-left-color: #1764d8; }
   50% { border-left-color: #adc6e9; }
 }
-#mk-recovery-guide:not([data-next-action=""]) { animation: mk-recovery-guide-edge 1.6s step-end infinite; }
+#mk-recovery-guide:not([data-next-action=""]) { animation: mk-recovery-guide-edge 1.6s ease-in-out infinite; }
 #dashboard:has(#mk-recovery-guide[data-next-action="reset"]) #statusPanel [data-tooltip="リセット"],
 #dashboard:has(#mk-recovery-guide[data-next-action="unlock"]) #statusPanel [data-tooltip="アラーム解除"],
 #dashboard:has(#mk-recovery-guide[data-next-action="resume"]) #statusPanel [data-tooltip="再開"],
 #dashboard:has(#mk-recovery-guide[data-next-action="home"]) #btnHAll {
   outline: 3px solid var(--mk-blue); outline-offset: -3px;
-  animation: mk-recovery-action 1.6s step-end infinite;
+  background: #edf4ff !important;
+  animation: mk-recovery-action 1.6s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   #dashboard:has(#mk-recovery-guide) :is(#mk-recovery-guide, #statusPanel .status-buttons-container .btn, #btnHAll) { animation: none; }

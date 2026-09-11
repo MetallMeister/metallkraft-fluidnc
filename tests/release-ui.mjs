@@ -9,7 +9,8 @@ import { chromium } from 'playwright';
 const commands = [], errors = [];
 const sockets = new Set();
 let machineState = 'Idle', spindleMode = 'M5', macroCount = 0, fileStatus = 'Ok';
-const status = () => `<${machineState}|MPos:0.000,0.000,5.000|WCO:0.000,0.000,0.000|FS:0,0|Ov:100,100,100>\n`;
+let machinePosition = '0.000,0.000,5.000';
+const status = () => `<${machineState}|MPos:${machinePosition}|WCO:0.000,0.000,0.000|FS:0,0|Ov:100,100,100>\n`;
 const modes = () => `[GC:G0 G54 G17 G21 G90 G94 ${spindleMode} M9 T0 F0 S0]\n`;
 const gcode = 'G21 G90\nG0 X0 Y0 Z5\nG1 X40 F200\nG1 Y30\nG1 X0\nG1 Y0\nM30\n';
 const broadcast = text => { for (const socket of sockets) if (socket.readyState === 1) socket.send(Buffer.from(text)); };
@@ -91,6 +92,56 @@ try {
   await page.waitForFunction(() => !document.querySelector('#mk-start-job').disabled);
   await preview.getByText('/example.nc', {exact:true}).waitFor();
   await page.waitForTimeout(500);
+  const marker = preview.locator('#tool-marker');
+  const waitMarker = async expected => {
+    await marker.waitFor({state:'visible'});
+    await page.waitForFunction(() => {
+      const doc = document.querySelector('#extra_content_metallkraft-preview iframe')?.contentDocument;
+      return doc?.querySelector('#tool-marker')?.dataset.position === window.__expectedMarker;
+    }).catch(() => { throw new Error('Marker did not recover: '+expected); });
+    assert.equal(await marker.getAttribute('data-position'), expected);
+  };
+  const expectPosition = async expected => {
+    await page.evaluate(value => { window.__expectedMarker = value; }, expected);
+    await waitMarker(expected);
+  };
+  const reselectFile = async () => {
+    await page.waitForTimeout(300);
+    await page.locator('#filesPanel .file-line-name[role="button"]').first().click();
+    await preview.getByText('/example.nc', {exact:true}).waitFor();
+    await page.waitForFunction(() => !document.querySelector('#mk-start-job').disabled);
+  };
+  await expectPosition('0,0,5');
+  const markerShape = await marker.evaluate(e => {
+    const r=e.getBoundingClientRect(), parent=e.parentElement.getBoundingClientRect();
+    return {width:r.width,height:r.height,tip:r.bottom-parent.top,anchor:parseFloat(e.style.top)};
+  });
+  assert.ok(markerShape.height > markerShape.width*2, 'Tool is a vertical bar');
+  assert.ok(Math.abs(markerShape.tip-markerShape.anchor)<1, 'Bar bottom anchors the reported position');
+  // Reports only: no actual start, reset or jog is sent to a controller.
+  for (const x of [10,20]) {
+    machineState='Run'; machinePosition=`${x},0,5`; broadcast(status());
+    await expectPosition(`${x},0,5`);
+    machineState='Idle'; broadcast(status());
+    await reselectFile();
+    await expectPosition(`${x},0,5`);
+  }
+  const unitReads = () => commands.filter(c=>c==='$/report_inches').length;
+  const readsBeforeReset=unitReads();
+  machineState='Alarm'; broadcast('Grbl 4.0.3 [FluidNC]\nALARM:1\n'); broadcast(status());
+  await marker.waitFor({state:'hidden'});
+  await page.waitForTimeout(350);
+  assert.equal(unitReads(),readsBeforeReset,'No settings read while alarmed');
+  machineState='Idle'; broadcast(status());
+  await expectPosition('20,0,5');
+  assert.equal(unitReads(),readsBeforeReset+1,'One metadata refresh after reset without disconnect');
+  machineState='Run'; machinePosition='30,0,5'; broadcast(status());
+  await expectPosition('30,0,5');
+  machineState='Idle'; machinePosition='0.000,0.000,5.000'; broadcast(status());
+  await reselectFile();
+  await expectPosition('0,0,5');
+  await preview.getByText('/example.nc', {exact:true}).waitFor();
+  while (await page.locator('.toasts-container .btn-clear').count()) await page.locator('.toasts-container .btn-clear').first().click();
   const geometry = async (width, height) => {
     await page.setViewportSize({width,height});
     await page.waitForTimeout(250);
@@ -208,12 +259,13 @@ try {
   const pulse = await native('リセット').evaluate(e => {
     const animation = e.getAnimations().find(a=>a.animationName==='mk-recovery-action');
     animation.pause(); animation.currentTime=0;
-    const first={color:getComputedStyle(e).outlineColor,rect:e.getBoundingClientRect().toJSON()};
+    const first={color:getComputedStyle(e).filter,rect:e.getBoundingClientRect().toJSON()};
     animation.currentTime=900;
-    const second={color:getComputedStyle(e).outlineColor,rect:e.getBoundingClientRect().toJSON()};
+    const second={color:getComputedStyle(e).filter,rect:e.getBoundingClientRect().toJSON()};
     animation.play(); return {first,second};
   });
-  assert.notEqual(pulse.first.color, pulse.second.color, 'Recovery outline visibly blinks');
+  assert.notEqual(pulse.first.color, pulse.second.color, 'Recovery button surface visibly pulses');
+  assert.deepEqual(await native('リセット').evaluate(e=>({duration:getComputedStyle(e).animationDuration,easing:getComputedStyle(e).animationTimingFunction})), {duration:'1.6s',easing:'ease-in-out'});
   assert.deepEqual(pulse.first.rect, pulse.second.rect, 'Pulsing cannot move the target');
   await page.emulateMedia({reducedMotion:'reduce'});
   assert.equal(await native('リセット').evaluate(e=>getComputedStyle(e).animationName), 'none');

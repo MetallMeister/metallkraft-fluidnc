@@ -25,11 +25,12 @@ let connected = true;
 let positionRequest = 0;
 let unitAttempts = 0;
 let retryUnitsOnIdle = false;
+let refreshMetadataOnIdle = false;
 const updateMarker = () => {
   if (loaded && !pathWcs) pathWcs = loaded.wcs || position.wcs;
   const point = position.position(loaded ? pathWcs : position.wcs, performance.now());
   const screen = point && view.projectPosition(point);
-  marker.hidden = !screen || screen[0] < 14 || screen[1] < 14 || screen[0] > canvas.clientWidth - 14 || screen[1] > canvas.clientHeight - 14;
+  marker.hidden = !screen || screen[0] < 7 || screen[1] < 30 || screen[0] > canvas.clientWidth - 7 || screen[1] > canvas.clientHeight - 2;
   positionReadout.dataset.available = String(Boolean(point));
   positionValues.textContent = point ? point.map((v,i)=>`${'XYZ'[i]} ${v.toFixed(3)}`).join(' / ') + ' mm' : '';
   positionState.textContent = !point ? '工具位置: 座標確認待ち' : marker.hidden ? '工具位置: 表示範囲外（全体表示で確認）' : '工具位置（作業座標）';
@@ -39,13 +40,17 @@ const updateMarker = () => {
   marker.title = `工具位置 X ${point[0].toFixed(3)} / Y ${point[1].toFixed(3)} / Z ${point[2].toFixed(3)} mm（基板報告値）`;
 };
 const tellParent = data => { if (window.parent !== window) window.parent.postMessage(data, location.origin); };
-const initializePosition = () => {
+const requestPositionMetadata = () => {
   const id = 'mk-tool-position-' + ++positionRequest;
   unitAttempts = 1;
   retryUnitsOnIdle = false;
-  tellParent({ kind: 'mk-preview-reloaded' });
   // Native extension callbacks also return HTTP-only settings replies.
   for (const content of ['$/report_inches', '$G']) tellParent({ type: 'cmd', target: 'webui', id, content });
+};
+const initializePosition = () => {
+  refreshMetadataOnIdle = false;
+  tellParent({ kind: 'mk-preview-reloaded' });
+  requestPositionMetadata();
 };
 const view = new PathCanvas(canvas, { background: '#080808', grid: '#242424', rapid: '#909090', cut: '#fff', text: '#ccc', origin: '#e0c96a', padding: 48, axes: ['#ddd','#ddd','#ddd'] }, () => {
   traversed.redraw();
@@ -64,7 +69,14 @@ const clearTraversal = () => { traversal.setPath(null); traversed.redraw(); };
 const receiveLine = line => {
   const now = performance.now();
   position.accept(line, now);
-  if (/^(?:Grbl |FluidNC |ALARM:)/.test(line)) { traversal.clear(); traversed.redraw(); return; }
+  if (/^(?:Grbl |FluidNC |ALARM:)/.test(line)) {
+    // A controller reset need not disconnect its WebSocket. Revalidate units/WCS
+    // on the next Idle report, without clearing the selected file or moving axes.
+    refreshMetadataOnIdle = true;
+    positionRequest++;
+    retryUnitsOnIdle = false;
+    traversal.clear(); traversed.redraw(); return;
+  }
   if (!line.startsWith('<')) return;
   const context = JSON.stringify([position.wcs, position.units, position.status.WCO || null]);
   const result = traversal.accept(line, position.position(pathWcs, now), now, context, position.units);
@@ -132,7 +144,7 @@ async function loadFile(file, selectionId = null) {
       info.textContent = '経路を描画中…';
       view.setPath(data);
       document.querySelector('#limitations').textContent = remoteId === null ? 'PCプレビュー / 衝突判定なし' : '白: 予定 / 灰: 通過推定';
-      document.querySelector('#limitations').title = data.notice + ' 黄色はファイル原点。水色の十字は同じワーク座標系での工具位置（基板報告値、実測値ではありません）。灰色は連続した報告座標と経路を照合した通過推定です。通信の空白・重複経路・照合できない区間は白のまま残し、完了を保証しません。';
+      document.querySelector('#limitations').title = data.notice + ' 黄色はファイル原点。青い棒の下端は同じワーク座標系での工具位置（基板報告値、実測値ではありません）。灰色は連続した報告座標と経路を照合した通過推定です。通信の空白・重複経路・照合できない区間は白のまま残し、完了を保証しません。';
     };
     worker.onerror = () => { if (job === generation) fail('経路を表示できません。CAMで確認してください。'); };
     timeout = setTimeout(() => { if (job === generation) fail('解析が30秒を超えたため中止しました。'); }, previewLimits.timeoutMs);
@@ -160,7 +172,10 @@ window.addEventListener('message', event => {
     for (const report of data.content.match(/<[^>]+>/g) || []) tellParent({ kind: 'mk-preview-status', report });
     for (const line of data.content.split(/\r?\n/)) receiveLine(line.trim());
     updateMarker();
-    if (retryUnitsOnIdle && /<Idle\|/.test(data.content)) {
+    if (refreshMetadataOnIdle && /<Idle\|/.test(data.content)) {
+      refreshMetadataOnIdle = false;
+      requestPositionMetadata();
+    } else if (retryUnitsOnIdle && /<Idle\|/.test(data.content)) {
       retryUnitsOnIdle = false; unitAttempts++;
       tellParent({type:'cmd',target:'webui',id:'mk-tool-position-'+positionRequest,content:'$/report_inches'});
     }
