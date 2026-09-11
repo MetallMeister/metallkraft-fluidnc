@@ -111,6 +111,17 @@
 #app .tooltip[data-tooltip="スリープ"] { --mk-help: "作業後の休止用です。送り・主軸・冷却を止め、軸モーターの保持を解除します。Z軸の落下に注意。続きから再開する休憩には「一時停止」を使います。復帰は「リセット」後に原点確認。電源OFFではありません。"; }
 #app #btnEStop { --mk-help: "加工を止めて確認するときに使います。送りを減速停止し、主軸・冷却へ停止指令を送る安全ドア停止です。今の画面では「リセット」で加工中止後に原点を確認します。通信経由のため、物理非常停止の代わりにはなりません。"; }
 
+#filesPanel .mk-delete-toolbar { position:sticky; top:0; z-index:3; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px; padding:5px; background:#f6f8fb; border-bottom:1px solid #dbe2eb; }
+#filesPanel .mk-delete-toolbar label { display:flex; align-items:center; gap:5px; white-space:nowrap; font-size:16px; }
+#filesPanel .mk-delete-toolbar input, #filesPanel .mk-delete-check { width:18px; height:18px; flex:0 0 18px; margin:4px; accent-color:#1764d8; cursor:pointer; }
+#filesPanel .mk-delete-check { align-self:center; }
+#filesPanel .mk-delete-button { min-height:34px; padding:4px 6px; font-size:16px; margin:0 2px; }
+#filesPanel .file-line-controls .mk-delete-button { width:34px; min-width:34px; flex:0 0 34px; }
+#filesPanel .mk-delete-button svg { width:18px; height:18px; }
+#filesPanel .mk-delete-button:disabled { background:#e2e5e9 !important; color:#89919a !important; cursor:not-allowed; opacity:1; transition:none; }
+#filesPanel .mk-delete-result { flex:1 0 100%; overflow-wrap:anywhere; font-size:16px; }
+.mk-delete-confirm ul { max-height:40vh; overflow:auto; overflow-wrap:anywhere; padding-left:24px; }
+
 /* One disclosure style, with the probe retaining its full-height hit area. */
 #dashboard :is(.mk-parameters > summary, .mk-file-management > summary, .panel-dashboard > .navbar .dropdown-toggle) {
   box-sizing:border-box; width:36px; min-width:36px; padding:0 !important; margin:0 !important;

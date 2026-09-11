@@ -5,6 +5,7 @@ import { useFileWorkflow } from './file-workflow.js';
 const hook = '(' + transformSync('globalThis.__mkWorkflow=(' + useFileWorkflow.toString() + ')', { minify: true, target: 'es2022' }).code.trim().replace(/^globalThis\.__mkWorkflow=/, '').replace(/;$/, '') + ')';
 assert.ok(hook.length > 1000 && hook.includes('sendSerialCmd'), 'Workflow implementation must not be optimized away');
 export const fileWorkflowHook = hook;
+export { deleteButton };
 const deleteButton = '(0,o.tZ)(L.yS,{m1:!0,ltooltip:!0,"data-tooltip":-1==e.size?(0,S.T)("S101"):(0,S.T)("S100"),icon:(0,o.tZ)(J.V,{}),onClick:t=>{l.Uc.haptic(),t.currentTarget.blur();const i=(0,o.BX)(y.HY,{children:[(0,o.BX)("div",{children:[-1==e.size?(0,S.T)("S101"):(0,S.T)("S100"),":"]}),(0,o.tZ)("div",{style:"text-align:center",children:(0,o.tZ)("li",{children:e.name})})]});(0,C.fv)({modals:c,title:(0,S.T)("S26"),content:i,button1:{cb:()=>{n.deleteCommand(e)},text:(0,S.T)("S27")},button2:{text:(0,S.T)("S28")}})}})';
 export const fileWorkflowPatches = [
   {

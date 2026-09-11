@@ -14,6 +14,8 @@ let reportedFeed=0, sdReport='';
 const status = () => `<${machineState}|MPos:${machinePosition}|WCO:0.000,0.000,0.000|FS:${reportedFeed},0|Ov:100,100,100${sdReport}>\n`;
 const modes = () => `[GC:G0 G54 G17 G21 G90 G94 ${spindleMode} M9 T0 F0 S0]\n`;
 const gcode = 'G21 G90\nG0 X0 Y0 Z5\nG1 X40 F200\nG1 Y30\nG1 X0\nG1 Y0\nM30\n';
+let deletionFiles=null, failDelete='';
+const deletions=[];
 const broadcast = text => { for (const socket of sockets) if (socket.readyState === 1) socket.send(Buffer.from(text)); };
 function command(text) {
   commands.push(text);
@@ -34,7 +36,16 @@ const server = createServer(async (req, res) => {
       command(cmd);
       return res.end(cmd === '$/report_inches' ? '$/report_inches=false\n' : '');
     }
-    if (url.pathname === '/files' || url.pathname === '/upload') return json({status:fileStatus,path:'/',files:[{name:'example.nc',size:String(Buffer.byteLength(gcode))},{name:'.fseventsd',size:'-1'},{name:'.Spotlight-V100',size:'-1'}],total:'1 GB',used:'1 KB',occupation:'1'});
+    if (url.pathname === '/files' || url.pathname === '/upload') {
+      if(url.searchParams.get('action')==='delete') {
+        const name=url.searchParams.get('filename');
+        assert.equal(url.pathname,'/upload');assert.equal(url.searchParams.get('path'),'/');
+        deletions.push(name);
+        await new Promise(resolve=>setTimeout(resolve,100));
+        if(name!==failDelete) deletionFiles=deletionFiles.filter(f=>f.name!==name);
+      }
+      return json({status:fileStatus,path:'/',files:deletionFiles||[{name:'example.nc',size:String(Buffer.byteLength(gcode))},{name:'.fseventsd',size:'-1'},{name:'.Spotlight-V100',size:'-1'}],total:'1 GB',used:'1 KB',occupation:'1'});
+    }
     if (url.pathname === '/login') return json({status:'Ok',authentication_lvl:'admin'});
     if (url.pathname === '/sd/example.nc') return res.end(gcode);
     const name = url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\/flash\//, '/').slice(1);
@@ -426,6 +437,49 @@ try {
   await expectPosition('6,0,5');
   await page.screenshot({path:'test-results/traversed.png'});
   machineState='Idle'; reportedFeed=0; sdReport=''; broadcast(status());
+  // Destructive paths are exercised only against these disposable mock entries.
+  deletionFiles=[{name:'example.nc',size:String(Buffer.byteLength(gcode))},{name:'part A.nc',size:'5'},{name:'part B.nc',size:'6'},{name:'folder',size:'-1'},{name:'.fseventsd',size:'-1'}];
+  await page.reload();
+  const allFiles=page.getByRole('checkbox',{name:'表示中のファイルを全選択'});
+  await page.waitForFunction(()=>!document.querySelector('.mk-delete-check')?.disabled);
+  const trash=page.getByRole('button',{name:'example.ncを削除',exact:true});
+  await trash.click();
+  await page.getByText('削除しますか？',{exact:true}).waitFor();
+  assert.equal(deletions.length,0,'Opening the confirmation does not delete');
+  await page.getByRole('button',{name:'キャンセル',exact:true}).click();
+  assert.equal(deletions.length,0,'Cancellation does not delete');
+  await trash.click();
+  await page.getByRole('button',{name:'削除する',exact:true}).click();
+  await page.getByText('1件を削除しました。',{exact:true}).waitFor();
+  assert.deepEqual(deletions,['example.nc']);
+  await allFiles.check();
+  await page.getByRole('button',{name:'選択した2件を削除',exact:true}).click();
+  await page.locator('.mk-delete-confirm').getByText('part A.nc',{exact:true}).waitFor();
+  await page.locator('.mk-delete-confirm').getByText('part B.nc',{exact:true}).waitFor();
+  await page.waitForTimeout(500);
+  const confirmationBox=await page.locator('.mk-delete-confirm').boundingBox();
+  assert.ok(confirmationBox && confirmationBox.x>=0 && confirmationBox.y>=0 && confirmationBox.y+confirmationBox.height<=900,'Delete confirmation stays in the viewport');
+  await page.screenshot({path:'test-results/delete-confirm.png'});
+  await page.getByRole('button',{name:'削除する',exact:true}).click();
+  await page.getByText('2件を削除しました。',{exact:true}).waitFor();
+  assert.deepEqual(deletions,['example.nc','part A.nc','part B.nc'],'Sequential delete only targets checked files');
+  assert.deepEqual(deletionFiles.map(f=>f.name),['folder','.fseventsd']);
+  deletionFiles=['a.nc','b.nc','c.nc'].map(name=>({name,size:'5'}));failDelete='b.nc';
+  await page.reload();await page.waitForFunction(()=>!document.querySelector('.mk-delete-check')?.disabled);
+  await allFiles.check();
+  await page.getByRole('button',{name:'選択した3件を削除',exact:true}).click();
+  await page.getByRole('button',{name:'削除する',exact:true}).click();
+  await page.getByText('削除できませんでした。残りの削除は中止しました。',{exact:true}).waitFor();
+  assert.deepEqual(deletions.slice(-2),['a.nc','b.nc']);
+  assert.ok(deletionFiles.some(f=>f.name==='c.nc'),'Failure stops the remaining queue');
+  const beforeDelete=deletions.length;
+  await page.getByRole('button',{name:'c.ncを削除',exact:true}).click();
+  machineState='Run';broadcast(status());await page.waitForTimeout(250);
+  await page.getByRole('button',{name:'削除する',exact:true}).click();
+  await page.getByText('状態が変わったため削除しませんでした。',{exact:true}).waitFor();
+  assert.equal(deletions.length,beforeDelete,'Confirmation is revalidated after machine state changes');
+  assert.equal(await allFiles.isDisabled(),true);
+  machineState='Idle';broadcast(status());
   assert.deepEqual(errors, []);
   console.log('Release UI passed: responsive layout, disabled jog stops, recovery guidance, native stop/reset/unlock commands, SD error visibility, spindle toggle, six-macro threshold and preview.');
 } catch (error) {

@@ -2,6 +2,10 @@
 
 [トップへ](../README.md)
 
+## v0.1.8からv0.1.9へ
+
+機械と主軸を停止し、バックアップ後に`index.html.gz`と`theme-metallkraft.gz`をFlash直下へ上書きして再読み込みします。YAML・`preferences.json`・登録マクロ・SDカードの内容は上書きしません。
+
 ## v0.1.7からv0.1.8へ
 
 停止・バックアップ後に`metallkraft-preview.html.gz`だけを上書きして再読み込みします。設定や通信処理の変更はありません。
