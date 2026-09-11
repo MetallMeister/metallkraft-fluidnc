@@ -110,9 +110,11 @@ try {
     near(boxes.zs.y, boxes.xy.y, 'Aligned Z stop');
     near(boxes.zs.x-boxes.xp.right, boxes.xy.width*.5+4, 'Half-button group gap');
     if (width >= 900 && height >= 768) {
-      assert.ok(boxes.spindle.y >= boxes.home.bottom+3, 'Home/spindle overlap '+JSON.stringify(boxes));
-      assert.ok(boxes.spindle.y <= boxes.home.bottom+12, 'Unused home/spindle gap '+JSON.stringify(boxes));
-      assert.ok(boxes.macros.y >= boxes.speed.bottom+3, 'Spindle/macro overlap '+JSON.stringify(boxes));
+      assert.ok(boxes.xy.width >= 40, 'Jog arrows and labels need a usable footprint');
+      assert.ok(boxes.speed.y >= boxes.home.bottom+20, 'Spindle heading separates manual axes '+JSON.stringify(boxes));
+      assert.ok(boxes.spindle.y >= boxes.speed.bottom+3, 'Set speed before starting spindle '+JSON.stringify(boxes));
+      assert.ok(boxes.spindle.y <= boxes.speed.bottom+12, 'Unused input/start gap '+JSON.stringify(boxes));
+      assert.ok(boxes.macros.y >= boxes.spindle.bottom+3, 'Spindle/macro overlap '+JSON.stringify(boxes));
       assert.ok(boxes.start.y >= boxes.macros.bottom+3, 'Macro/start overlap '+JSON.stringify(boxes));
       assert.ok(boxes.terminal.y >= boxes.readout.bottom+3, 'Readout/terminal overlap '+JSON.stringify(boxes));
     }
@@ -188,18 +190,16 @@ try {
   const guide = page.locator('#mk-recovery-guide');
   const native = label => page.locator('#statusPanel [data-tooltip="'+label+'"]');
   const nonPolling = start => commands.slice(start).filter(cmd=>!['?','$G','$I','$/report_inches'].includes(cmd));
-  assert.match(await native('スリープ').evaluate(e=>getComputedStyle(e,'::after').content), /保持を解除/);
+  assert.equal(await native('スリープ').isVisible(), false);
+  const statusButtons=page.locator('#statusPanel .status-buttons-container button:visible');
+  assert.equal(await statusButtons.count(),3);
+  const statusWidths=await statusButtons.evaluateAll(elements=>elements.map(e=>e.getBoundingClientRect().width));
+  assert.ok(Math.max(...statusWidths)-Math.min(...statusWidths)<1, 'Remaining buttons share the full row evenly');
   assert.match(await page.locator('#btnEStop').evaluate(e=>getComputedStyle(e,'::after').content), /物理非常停止の代わりにはなりません/);
-  await native('スリープ').hover();
-  await page.waitForTimeout(1100);
-  assert.equal(await native('スリープ').evaluate(e=>getComputedStyle(e,'::after').visibility), 'visible');
-  await page.screenshot({path:'test-results/sleep-help.png'});
   await page.mouse.move(0,0);
   assert.equal(await native('リセット').evaluate(e=>getComputedStyle(e).animationName), 'none');
   let start = commands.length;
-  await native('スリープ').click();
-  await page.waitForTimeout(250);
-  assert.deepEqual(nonPolling(start), ['$SLP']);
+  // Sleep remains a firmware state even though its dashboard button is hidden.
   machineState = 'Sleep'; broadcast(status());
   await guide.getByText('スリープから戻すには').waitFor();
   assert.equal(await native('リセット').evaluate(e=>getComputedStyle(e).outlineStyle), 'solid');

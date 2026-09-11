@@ -109,6 +109,60 @@
 }
 #app .tooltip[data-tooltip="スリープ"] { --mk-help: "作業後の休止用です。送り・主軸・冷却を止め、軸モーターの保持を解除します。Z軸の落下に注意。続きから再開する休憩には「一時停止」を使います。復帰は「リセット」後に原点確認。電源OFFではありません。"; }
 #app #btnEStop { --mk-help: "加工を止めて確認するときに使います。送りを減速停止し、主軸・冷却へ停止指令を送る安全ドア停止です。今の画面では「リセット」で加工中止後に原点を確認します。通信経由のため、物理非常停止の代わりにはなりません。"; }
+
+/* Functional bands keep the existing controls and native disabled fieldsets. */
+#dashboard #statusPanel .status-buttons-container { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#dashboard #statusPanel .status-buttons-container [data-tooltip="スリープ"] { display: none; }
+#dashboard #filesPanel::before,
+#dashboard #terminalPanel::before,
+#jogPanel .jog-positions-ctrls::before,
+#SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) legend,
+#dashboard #macrosPanel > .navbar {
+  background: #e8ecf0; color: #38424e; border: 0; border-top: 2px solid #a9b2bd;
+  border-radius: 0; padding: 2px 6px; height: 24px; min-height: 24px;
+  box-sizing: border-box; font-size: 16px; font-weight: 650; line-height: 20px;
+}
+#dashboard #filesPanel { grid-template-rows: 24px 36px minmax(0, 1fr) auto auto; }
+#dashboard #filesPanel::before { content: "加工ファイル"; grid-area: 1 / 1 / 2 / 3; }
+#dashboard #filesPanel > .navbar { grid-area: 2 / 2; }
+#dashboard #filesPanel > .input-group { grid-area: 2 / 1; }
+#dashboard #filesPanel > .files-list { grid-area: 3 / 1 / 4 / 3; }
+#dashboard #filesPanel > .mk-job-start { grid-area: 4 / 1 / 5 / 3; }
+#dashboard #filesPanel > .files-list-footer { grid-area: 5 / 1 / 6 / 3; }
+#dashboard #terminalPanel { grid-template-rows: 24px 36px minmax(0, 1fr); }
+#dashboard #terminalPanel::before { content: "通信ログ"; grid-area: 1 / 1 / 2 / 3; }
+#dashboard #terminalPanel > .navbar { grid-area: 2 / 2; }
+#dashboard #terminalPanel > .input-group { grid-area: 2 / 1; }
+#dashboard #terminalPanel > .terminal { grid-area: 3 / 1 / 4 / 3; }
+#jogPanel .jog-positions-ctrls::before { content: "現在位置"; grid-column: 1 / -1; }
+#SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) legend { display: block; width: 100%; margin: 0 0 4px; }
+#SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) legend label { display: block; font-size: 0; }
+#SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) legend label::before { content: "主軸"; font-size: 16px; line-height: 20px; }
+#SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) > .field-group-content { display: flex; flex-direction: column; gap: 6px; }
+#SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) .states-buttons-container { order: 2; }
+#dashboard #SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) .form-group { margin-top: 0; }
+#SpindlePanel #group-spindlespeedInput .columns { margin-top: 0 !important; }
+#SpindlePanel #group-spindlespeedInput .columns { display: grid; grid-template-columns: minmax(0, 1fr) 96px; align-items: center; gap: 6px; min-height: 40px; margin: 0 !important; }
+#SpindlePanel #group-spindlespeedInput :is(.form-label, .input-group) { width: auto; min-width: 0; margin: 0; padding: 0; }
+#SpindlePanel #group-spindlespeedInput .form-label { line-height: 20px; }
+#dashboard #macrosPanel > .navbar { height: 28px; min-height: 28px; }
+#dashboard #macrosPanel .macro-buttons-panel button { min-height: 28px; }
+@media (min-width: 900px) and (min-height: 768px) {
+  #dashboard { --mk-cell: min(80px, calc((100dvh - 682px) / 3), calc((max(215px, (100cqw - 24px) / 4.5) - 12px) / 4.5)); --mk-macro-height: calc(100dvh - 332px - var(--mk-spindle-top)); }
+  #jogPanel .jog-positions-ctrls { grid-template-rows: 24px repeat(3, minmax(0, 1fr)); gap: 3px; }
+  #dashboard #SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) { height: 118px; }
+}
+@media (min-width: 900px) and (min-height: 768px) and (max-height: 850px) {
+  #dashboard { --mk-cell: min(64px, max(40px, calc((100dvh - 664px) / 3)), calc((max(215px, (100cqw - 24px) / 4.5) - 12px) / 4.5)); --mk-macro-height: calc(100dvh - 318px - var(--mk-spindle-top)); }
+  #dashboard #SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) { height: 104px; }
+  #SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) legend,
+  #dashboard #macrosPanel > .navbar { height: 20px; min-height: 20px; line-height: 18px; padding: 0 6px; margin-bottom: 0; }
+  #SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) legend label::before { line-height: 18px; }
+  #SpindlePanel fieldset:has([data-tooltip="主軸を正転"]) > .field-group-content { gap: 4px; }
+  #dashboard #SpindlePanel button:is([data-tooltip="主軸を正転"], [data-tooltip="主軸を停止"]) { height: 40px; min-height: 40px; }
+  #SpindlePanel #group-spindlespeedInput .columns { min-height: 36px; }
+  #dashboard #macrosPanel .macro-buttons-panel { grid-auto-rows: calc((var(--mk-macro-height) - 24px) / 2); }
+}
 @media (min-width: 900px) and (min-height: 768px) {
   #mk-recovery-guide { grid-area: 5 / 1 / 7 / 2; z-index: 11; align-self: stretch; }
   #dashboard:has(#mk-recovery-guide) #metallkraft-news { visibility: hidden; }
