@@ -1,10 +1,23 @@
-# MKS DLC32 MAX用の基板設定
+# 任意の設定例: MKS DLC32 MAX
 
 [導入手順へ](INSTALL.md)
+
+**このページはUIの共通導入手順ではありません。** 他の基板の方、すでに機械設定が動いている方はこのYAMLを使わず、[UIだけの導入手順](INSTALL.md)へ進んでください。
 
 対象: Makerbase **MKS DLC32 MAX V1.0_002 / ESP32-S3**。通常版DLC32とはピン配置が異なります。
 
 同梱ファイル: [`install/boards/mks-dlc32-max-v1.0/config.yaml`](../install/boards/mks-dlc32-max-v1.0/config.yaml)
+
+## この設定例を使う場合のみ
+
+1. 下記の設定状態と自分の配線・機構を照合します。同じMAXでも校正値まで共通ではありません。
+2. まだFluidNCがない場合は、[公式Web Installer](https://installer.fluidnc.com/fluidnc)で基板がESP32-S3として認識されることを確認し、基準版v4.0.3 Wi-Fi版を導入します。既存の設定がある場合は先にバックアップしてください。`fresh-install`は既存ファイル・設定を消します。
+3. 停止状態で`File browser` → **Flash**の直下へ、この基板に合わせて確認・調整した`config.yaml`を送ります。
+4. 一覧で**Active config**にします。選べない場合はTerminalから`$Config/Filename=config.yaml`を送ります。
+5. 転送完了後に基板を再起動し、`Startup messages`で設定ファイル名とエラーの有無を確認します。ブラウザの再読み込みだけではYAMLは再読込されません。
+6. エラーが解消してから[UI導入](INSTALL.md)へ進みます。起動できることと、実機を安全に加工できることは別です。
+
+新規導入直後に設定ファイルがない旨のエラーが出る場合がありますが、すべての起動エラーを正常扱いしないでください。
 
 ## 設定の状態
 
