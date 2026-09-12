@@ -19,6 +19,6 @@ test('No premature resume suggestion while decelerating or disconnected', () => 
   assert.equal(recoveryView({state:'Hold',code:'0'}).action, 'resume');
   for (const state of ['Run','Jog','?']) assert.equal(recoveryView({state,intent:'quickstop'}).action, '');
   assert.match(recoveryView({state:'Door'}).text, /途中再開ではありません/);
-  assert.match(recoveryView({state:'Idle',intent:'sleep'}).text, /原点/);
+  assert.equal(recoveryView({state:'Idle',intent:'sleep'}), null);
   assert.equal(recoveryView({state:'Idle',errorCode:20,intent:'sleep'}).title, 'エラーを確認してください');
 });

@@ -46,6 +46,8 @@ await writeFile('dist-standard/metallkraft-preview.html.gz', gzipSync(preview,{l
 const files = ['index.html.gz', 'theme-metallkraft.gz', 'lang-ja.json.gz', 'preferences.json', 'metallkraft-links.html', 'metallkraft-news.html', 'metallkraft-preview.html.gz', 'metallkraft-job.html'];
 const manifest = { standardSource: source, standardSha256: expected, firmwareChanges: false, standardExecutableModified: true, standardModification: 'Reviewed display patches and SD selection/preview/direct-start gate; native job command builder and sender retained', standardCommunicationModified: false, additionalCommunication: 'Bounded read-only SD GET on selection and before direct start; native $/report_inches and $G initialize the marker, with one Idle-only retry if the units read fails; same-origin display messages; no additional socket or controller polling', customExecutableJavaScript: true, customJavaScriptScope: ['toolpath-preview', 'read-only-announcements', 'read-only-job-progress', 'sd-file-selection-and-start-gate'], noticesSource: 'https://metallmeister.net/wp-json/wp/v2/pages/4102', files: {} };
 manifest.customJavaScriptScope.push('sd-file-deletion-selection-confirmation-and-sequencing');
+manifest.customJavaScriptScope.push('sequential-sd-downloads');
+manifest.additionalCommunication += '; user-requested sequential read-only SD downloads with per-file timeout and state checks';
 for (const file of files) { const bytes = await readFile('dist-standard/' + file); manifest.files[file] = { bytes: bytes.length, sha256: sha256(bytes) }; }
 await writeFile('dist-standard/manifest.json', JSON.stringify(manifest, null, 2) + '\n');
 console.log(JSON.stringify(manifest, null, 2));

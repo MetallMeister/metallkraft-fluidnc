@@ -14,7 +14,6 @@ export function recoveryView({ state, code, alarmCode, errorCode, intent }) {
     ? view('一時停止中です', '工具と材料の状態を確認して、上の「再開」で続きを実行します。', 'resume')
     : view('停止完了を待っています', '停止完了の案内に変わるまで、そのままお待ちください。');
   if (state === 'Error' || Number(errorCode) > 0) return view('エラーを確認してください', 'ログで原因を確認してください。解消するまでは加工を開始しないでください。');
-  if (state === 'Idle' && intent) return view('運転を始める前に', '実際の停止、原点・工具位置・固定を確認して、加工ファイルを選び直してください。');
   if (intent && ['Run', 'Jog'].includes(state)) return view('停止指令の反映待ち', '停止を確認できていません。止まらない場合は機械の非常停止を使用してください。');
   return null;
 }

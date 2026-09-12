@@ -8,6 +8,7 @@ import { recoveryPatches } from '../standard/recovery-patches.mjs';
 import { jogStop, guardedJogStop } from '../standard/live-controls-patches.mjs';
 import { manualInputPatches } from '../standard/manual-input-patches.mjs';
 import { undoFileDeletion } from '../standard/file-deletion-patches.mjs';
+import { buildSync } from 'esbuild';
 
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const files = ['index.html.gz', 'theme-metallkraft.gz', 'lang-ja.json.gz', 'preferences.json', 'metallkraft-links.html', 'metallkraft-news.html', 'metallkraft-preview.html.gz'];
@@ -42,9 +43,16 @@ test('The published executable contains exactly the existing allowlisted patches
   assert.equal(sha(await readFile('vendor/esp3d-webui-v3.0.10-source.tar.gz')), 'f0bc0d805b192f6f45c970fb29f2348743bb824ec3bf55b02a0d69f27d664ea3');
 });
 
-test('Only reviewed deletion UI and input availability differ from the v0.1.5 executable', async () => {
+test('Only reviewed file controls, idle notice and input availability differ from v0.1.5', async () => {
   let html=undoFileDeletion(gunzipSync(await readFile('install/ui/index.html.gz')).toString());
   for (const {before,after} of manualInputPatches.toReversed()) html=html.replace(after,()=>before);
+  const current=await readFile('standard/recovery-guide.js','utf8');
+  const anchor="  if (intent && ['Run', 'Jog'].includes(state))";
+  assert.equal(current.split(anchor).length,2);
+  const prior=current.replace(anchor,"  if (state === 'Idle' && intent) return view('運転を始める前に', '実際の停止、原点・工具位置・固定を確認して、加工ファイルを選び直してください。');\n"+anchor);
+  const source=buildSync({stdin:{contents:prior,sourcefile:'standard/recovery-guide.js'},bundle:true,write:false,format:'iife',globalName:'mkRecoveryModule',target:'es2022',minify:true}).outputFiles[0].text;
+  assert.equal(html.split(recoveryPatches[0].after).length,2);
+  html=html.replace(recoveryPatches[0].after,()=>`const mkRecovery=(()=>{${source};return mkRecoveryModule.createRecoveryGuide(x,o.tZ,()=>Zt());})();const he={id:"terminalPanel",`);
   assert.equal(sha(gzipSync(html,{level:9})), '9e3421905c46389f294f03228c1946a2b1f4ed1b62ea871549f3939cabb96c7d');
 });
 

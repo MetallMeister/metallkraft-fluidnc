@@ -199,6 +199,9 @@
   body:has(#dashboard) .toasts-container { top: 112px; left: 8px; right: auto; width: calc(100vw - 40px - 3 * max(215px, (100vw - 40px) / 4.5)); max-height: calc(100dvh - 310px); overflow-y: auto; }
   body:has(#dashboard) .toasts-container > .toast { width: 100%; min-width: 0; overflow-wrap: anywhere; }
 }
+/* The same support destinations are already visible beside the dashboard. */
+header.navbar .dropdown:has(#metallkraft-links) { display: none !important; }
+
 @media (min-width: 1200px) and (min-height: 768px) {
   #dashboard:not(:has(#mk-recovery-guide)) #metallkraft-preview { margin-bottom: -44px !important; }
   #dashboard #metallkraft-news { height: 132px !important; align-self: end; }

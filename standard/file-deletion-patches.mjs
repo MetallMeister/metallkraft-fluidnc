@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 import { transformSync } from 'esbuild';
 import { useFileDeletion } from './file-deletion.js';
 import { deleteButton } from './file-workflow-patches.mjs';
+import { icons } from 'lucide';
 
 const hook='('+transformSync('globalThis.__mkDeletion=('+useFileDeletion.toString()+')',{minify:true,target:'es2022'}).code.trim().replace(/^globalThis\.__mkDeletion=/,'').replace(/;$/,'')+')';
 assert.ok(hook.length>1000 && hook.includes('deleteCommand'));
 const wrapped='(0,o.BX)("details",{class:"mk-file-management",children:[(0,o.tZ)("summary",{"aria-label":"ファイル管理",children:"…"}),'+deleteButton+']})';
 export const fileDeletionPatches=[
-  {before:'(x,o.BX,t,n,u,Zt(),C.fv,c,W.s);return(0,x.d4)',after:`(x,o.BX,t,n,u,Zt(),C.fv,c,W.s);const mkDelete=${hook}(x,o.BX,t,n,u,Zt(),C.fv,c,J.V,mk.clear);return(0,x.d4)`},
-  {before:wrapped,after:'mkDelete.remove(e)'},
+  {before:'(x,o.BX,t,n,u,Zt(),C.fv,c,W.s);return(0,x.d4)',after:`(x,o.BX,t,n,u,Zt(),C.fv,c,W.s);const mkDelete=${hook}(x,o.BX,t,n,u,Zt(),C.fv,c,J.V,mk.clear,${JSON.stringify(icons.Download)});return(0,x.d4)`},
+  {before:wrapped,after:'mkDelete.remove(e),mkDelete.download(e)'},
   {before:'class:"file-line form-control"+(mk.selected(e)?" mk-file-selected":""),children:[',after:'class:"file-line form-control"+(mk.selected(e)?" mk-file-selected":""),children:[mkDelete.checkbox(e),'},
 ];
 // Insert the toolbar before the existing native list, leaving its grid row unchanged.

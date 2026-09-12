@@ -16,6 +16,8 @@ const modes = () => `[GC:G0 G54 G17 G21 G90 G94 ${spindleMode} M9 T0 F0 S0]\n`;
 const gcode = 'G21 G90\nG0 X0 Y0 Z5\nG1 X40 F200\nG1 Y30\nG1 X0\nG1 Y0\nM30\n';
 let deletionFiles=null, failDelete='';
 const deletions=[];
+const downloadRequests=[];
+let failDownload='';
 const broadcast = text => { for (const socket of sockets) if (socket.readyState === 1) socket.send(Buffer.from(text)); };
 function command(text) {
   commands.push(text);
@@ -47,7 +49,14 @@ const server = createServer(async (req, res) => {
       return json({status:fileStatus,path:'/',files:deletionFiles||[{name:'example.nc',size:String(Buffer.byteLength(gcode))},{name:'.fseventsd',size:'-1'},{name:'.Spotlight-V100',size:'-1'}],total:'1 GB',used:'1 KB',occupation:'1'});
     }
     if (url.pathname === '/login') return json({status:'Ok',authentication_lvl:'admin'});
-    if (url.pathname === '/sd/example.nc') return res.end(gcode);
+    if (url.pathname.startsWith('/sd/')) {
+      const name=decodeURIComponent(url.pathname.slice(4));downloadRequests.push(name);
+      if(name===failDownload)return res.writeHead(500).end();
+      if(name==='example.nc')return res.end(gcode);
+      const file=deletionFiles?.find(e=>e.name===name && Number(e.size)>=0);
+      if(file)return res.end('x'.repeat(Number(file.size)));
+      return res.writeHead(404).end();
+    }
     const name = url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\/flash\//, '/').slice(1);
     if (!/^[a-zA-Z0-9_.-]+$/.test(name)) return res.writeHead(404).end();
     let bytes;
@@ -333,13 +342,11 @@ try {
   await page.waitForTimeout(250);
   assert.deepEqual(nonPolling(start), ['$X']);
   machineState = 'Idle'; broadcast(status());
-  await guide.getByText('運転を始める前に').waitFor();
   start = commands.length;
-  await guide.getByRole('button', {name:'案内を閉じる'}).click();
   await page.waitForTimeout(250);
   assert.equal(await guide.count(),0);
   assert.equal(await native('アラーム解除').evaluate(e=>getComputedStyle(e).animationName), 'none');
-  assert.ok(nonPolling(start).length===0, 'Dismissing guidance cannot operate the machine');
+  assert.ok(nonPolling(start).length===0, 'Hiding idle guidance cannot operate the machine');
 
   machineState = 'Run'; broadcast(status());
   start = commands.length;
@@ -442,6 +449,32 @@ try {
   await page.reload();
   const allFiles=page.getByRole('checkbox',{name:'表示中のファイルを全選択'});
   await page.waitForFunction(()=>!document.querySelector('.mk-delete-check')?.disabled);
+  const downloads=[];
+  page.on('download',item=>downloads.push(item));
+  const individual=page.getByRole('button',{name:'example.ncをダウンロード',exact:true});
+  const trashBox=await page.getByRole('button',{name:'example.ncを削除',exact:true}).boundingBox();
+  const downloadBox=await individual.boundingBox();
+  assert.ok(downloadBox.x>=trashBox.x+trashBox.width,'Download follows trash');
+  await individual.click();
+  await page.waitForTimeout(2400);
+  assert.equal(downloads[0].suggestedFilename(),'example.nc');
+  const saved=await downloads[0].path();assert.equal(await readFile(saved,'utf8'),gcode);
+  const beforeBulk=downloadRequests.length;
+  await page.getByRole('button',{name:'全ダウンロード',exact:true}).click();
+  await page.getByText('3件の保存を要求しました。複数ダウンロードの許可が出た場合は許可してください。',{exact:true}).waitFor();
+  assert.deepEqual(downloadRequests.slice(beforeBulk),['example.nc','part A.nc','part B.nc']);
+  assert.deepEqual(downloads.slice(1).map(d=>d.suggestedFilename()),['example.nc','part A.nc','part B.nc']);
+  failDownload='part A.nc';
+  const beforeFailed=downloadRequests.length;
+  await page.getByRole('button',{name:'全ダウンロード',exact:true}).click();
+  await page.getByText('1/3件で中断。取得失敗: part A.nc',{exact:true}).waitFor();
+  assert.deepEqual(downloadRequests.slice(beforeFailed),['example.nc','part A.nc']);
+  failDownload='';
+  machineState='Run';broadcast(status());await page.waitForTimeout(300);
+  assert.equal(await individual.isDisabled(),true);
+  assert.equal(await page.getByRole('button',{name:'全ダウンロード',exact:true}).isDisabled(),true);
+  machineState='Idle';broadcast(status());await page.waitForTimeout(300);
+  await page.screenshot({path:'test-results/download-controls.png'});
   const trash=page.getByRole('button',{name:'example.ncを削除',exact:true});
   await trash.click();
   await page.getByText('削除しますか？',{exact:true}).waitFor();
