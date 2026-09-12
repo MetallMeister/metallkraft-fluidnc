@@ -2,6 +2,8 @@
 
 [トップへ](../README.md)
 
+**旧版を入れたい場合は [バージョン一覧](VERSIONS.md) から目的のZIPを選んでください。** 最新版だけでなく、v0.1.0以降の各版を取得できます。旧版へ戻す手順も同ページにあります。
+
 ## v0.1.11からv0.1.12へ
 
 機械と主軸を停止し、バックアップ後に `install/ui/` の `index.html.gz` と `theme-metallkraft.gz` を本体Flash直下へ上書きして、画面を再読み込みします。`config.yaml`・`preferences.json`・登録マクロ・SDカードの内容は変更しません。

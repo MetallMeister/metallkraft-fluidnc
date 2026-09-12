@@ -4,7 +4,11 @@
 
 自分の機械設定はそのままに、操作画面だけを導入できます。日本語のジョグ操作、SDファイル選択、大きな加工開始・クイック停止、加工予定経路の表示を使えます。MetallMeisterが開発・公開しています。
 
-**[一式をダウンロード（ZIP）](https://github.com/MetallMeister/metallkraft-fluidnc/archive/refs/heads/main.zip)** · **[はじめての導入手順](docs/INSTALL.md)** · **[更新・元に戻す](docs/UPDATE.md)**
+**[最新版 v0.1.12をダウンロード（ZIP）](https://github.com/MetallMeister/metallkraft-fluidnc/releases/download/v0.1.12/metallkraft-ui-v0.1.12.zip)** · **[過去のバージョン一覧・ダウンロード](docs/VERSIONS.md)**
+
+**[はじめての導入手順](docs/INSTALL.md)** · **[更新・元に戻す](docs/UPDATE.md)**
+
+**[Releasesで全バージョンを見る](https://github.com/MetallMeister/metallkraft-fluidnc/releases)** — 各版のAssetsにある `metallkraft-ui-v*.zip` が導入用です。
 
 利用前に[免責事項・安全上の注意](docs/DISCLAIMER.md)を確認してください。本ソフトウェアは適用法令で認められる範囲で無保証です。クイック停止は物理的な非常停止の代わりにはなりません。
 
