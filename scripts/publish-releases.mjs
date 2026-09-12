@@ -29,7 +29,8 @@ const api=async(path,method='GET',data)=>{
 };
 const releases=apply?await api('/releases?per_page=100'):[];
 for(const tag of tags){
-  const prerelease=tag.includes('-');
+  // Until a stable release is explicitly approved, every published build is beta.
+  const prerelease=true;
   const manifest=JSON.parse(git('show',`${tag}:install/manifest.json`));
   assert.equal('v'+manifest.version,tag);
   for(const [file,expected] of Object.entries(manifest.files))assert.equal(sha(git('show',`${tag}:install/${file}`)),expected.sha256,`${tag}: ${file}`);
@@ -40,12 +41,12 @@ for(const tag of tags){
   await writeFile(`${output}/${name}.sha256`,checksum);
   const section=changelog.split(`## ${tag} / `)[1];assert.ok(section,`Missing changelog ${tag}`);
   const changes=section.split('\n').slice(1).join('\n').split('\n## ')[0].trim();
-  const betaNote=prerelease?'**これはベータ版です。実機設定をバックアップし、停止状態で表示と復元対象を確認してから使用してください。**\n\n':'';
+  const betaNote='**これはベータ版です。実機設定をバックアップし、停止状態で表示と復元対象を確認してから使用してください。**\n\n';
   const body=`${betaNote}## ダウンロード・導入\n\n下の **Assets → ${name}** をダウンロードしてください。ビルド済みの画面ファイルと説明書をまとめています。\n\n1. 機械・主軸を停止し、本体Flashをバックアップ。\n2. ZIPを展開し、\`install/ui/\` を開きます。\n3. 初回導入は7ファイルを本体Flash直下へアップロード。更新・旧版への復元では **preferences.jsonを除く6ファイル** を同じ版で揃えて上書き。\n4. ブラウザを再読み込みします。\n\n**機械用config.yamlは変更しません。** 既存のpreferences.json・登録マクロも更新時は保持します。標準復元機能を初めて使う場合は、正常な自機設定を確認してから「現在の設定を標準として保存」を実行してください。機械固有の標準値は配布ZIPに含みません。FluidNC本体・基板設定例もこのUI用ZIPには含みません。\n\n基準: FluidNC v4.0.3 / WebUI-3 v3.0.10。旧版には後続版で修正した不具合が残ります。\n\n[導入手順](${root}/blob/main/docs/INSTALL.md) · [更新・復元](${root}/blob/main/docs/VERSIONS.md) · [標準設定への復元](${root}/blob/main/docs/RESTORE.md) · [免責事項](${root}/blob/main/docs/DISCLAIMER.md)\n\n## この版の変更\n\n${changes}\n\n## ソースコード\n\nAssetsのSource code (zip / tar.gz)はこのタグの全ソースです。UI用ZIPは公開済みタグから抽出し、配布ファイルのSHA-256を検証しています。\n`;
   if(!apply){console.log({tag,name,bytes:bytes.length,sha256:sha(bytes)});continue;}
   let release=releases.find(r=>r.tag_name===tag);
   if(release&&!release.draft){console.log({tag,skipped:'already published'});continue;}
-  if(!release)release=await api('/releases','POST',{tag_name:tag,name:`MetallKraft UI ${tag}${prerelease?' (Beta)':''}`,body,draft:true,prerelease});
+  if(!release)release=await api('/releases','POST',{tag_name:tag,name:`MetallKraft UI ${tag} (Beta)`,body,draft:true,prerelease});
   for(const [assetName,data] of [[name,bytes],[`${name}.sha256`,checksum]]){
     const existing=release.assets.find(a=>a.name===assetName);
     if(existing){assert.equal(existing.digest,`sha256:${sha(data)}`,'Existing draft asset differs');continue;}
