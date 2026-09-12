@@ -6,7 +6,7 @@
 
 | バージョン | 一式ダウンロード | 主な変更 |
 | --- | --- | --- |
-| **v0.2.0-beta.1（最新Beta）** | **[ZIP](https://github.com/MetallMeister/metallkraft-fluidnc/releases/download/v0.2.0-beta.1/metallkraft-ui-v0.2.0-beta.1.zip)** | 自機設定の保存・比較・個別／一括復元 |
+| **v0.1.13（最新Beta）** | **[ZIP](https://github.com/MetallMeister/metallkraft-fluidnc/releases/download/v0.1.13/metallkraft-ui-v0.1.13.zip)** | 自機設定の保存・比較・個別／一括復元 |
 | **v0.1.12（Beta）** | **[ZIP](https://github.com/MetallMeister/metallkraft-fluidnc/releases/download/v0.1.12/metallkraft-ui-v0.1.12.zip)** | 全・個別ダウンロード、上部メニューの整理 |
 | v0.1.11（Beta） | [ZIP](https://github.com/MetallMeister/metallkraft-fluidnc/releases/download/v0.1.11/metallkraft-ui-v0.1.11.zip) | 短い間隔で届く位置報告の通過推定を改善 |
 | v0.1.10（Beta） | [ZIP](https://github.com/MetallMeister/metallkraft-fluidnc/releases/download/v0.1.10/metallkraft-ui-v0.1.10.zip) | 重複経路での通過推定を改善 |

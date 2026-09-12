@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0-beta.1",
+  "version": "0.1.13",
   "date": "2026-09-12",
   "firmware": "FluidNC v4.0.3 (not included)",
   "webuiBase": "ESP3D-WEBUI v3.0.10",
