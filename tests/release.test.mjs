@@ -9,6 +9,7 @@ import { jogStop, guardedJogStop } from '../standard/live-controls-patches.mjs';
 import { manualInputPatches } from '../standard/manual-input-patches.mjs';
 import { undoFileDeletion } from '../standard/file-deletion-patches.mjs';
 import { buildSync } from 'esbuild';
+import { installDefaults, removeDefaults } from '../standard/defaults-bundle.mjs';
 
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const files = ['index.html.gz', 'theme-metallkraft.gz', 'lang-ja.json.gz', 'preferences.json', 'metallkraft-links.html', 'metallkraft-news.html', 'metallkraft-preview.html.gz'];
@@ -28,8 +29,8 @@ test('The published executable contains exactly the existing allowlisted patches
   const source = await readFile('vendor/index.html.gz');
   assert.equal(sha(source), '46f6a276e1c4d17f17cfd6a5c48d44d5cb23ea16ce32e67194ee160951d030fa');
   const actual = gunzipSync(await readFile('install/ui/index.html.gz')).toString();
-  assert.equal(actual, patchStandardUI(gunzipSync(source).toString()));
-  let previous = undoFileDeletion(actual);
+  assert.equal(actual, installDefaults(patchStandardUI(gunzipSync(source).toString())));
+  let previous = undoFileDeletion(removeDefaults(actual));
   for (const {before,after} of manualInputPatches.toReversed()) {
     assert.equal(previous.split(after).length,2);
     previous=previous.replace(after,()=>before);
@@ -44,7 +45,7 @@ test('The published executable contains exactly the existing allowlisted patches
 });
 
 test('Only reviewed file controls, idle notice and input availability differ from v0.1.5', async () => {
-  let html=undoFileDeletion(gunzipSync(await readFile('install/ui/index.html.gz')).toString());
+  let html=undoFileDeletion(removeDefaults(gunzipSync(await readFile('install/ui/index.html.gz')).toString()));
   for (const {before,after} of manualInputPatches.toReversed()) html=html.replace(after,()=>before);
   const current=await readFile('standard/recovery-guide.js','utf8');
   const anchor="  if (intent && ['Run', 'Jog'].includes(state))";

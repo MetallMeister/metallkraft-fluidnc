@@ -1,0 +1,30 @@
+import {mkdir,writeFile} from 'node:fs/promises';
+import {gzipSync,gunzipSync} from 'node:zlib';
+import {createHash} from 'node:crypto';
+import assert from 'node:assert/strict';
+import {DefaultsController,BASELINE_FILE} from '../standard/defaults-core.js';
+import {installDefaults,removeDefaults} from '../standard/defaults-bundle.mjs';
+const controller=new DefaultsController(process.argv[2]);
+assert.ok(process.argv.includes('--apply'),'Explicit --apply required');
+await controller.idle();
+const listing=await(await controller.request('/files?path=/')).json();
+assert.ok(!listing.files.some(f=>f.name===BASELINE_FILE),'A baseline already exists; do not replace it automatically');
+const backup=`backups/defaults-${Date.now()}`;await mkdir(backup,{recursive:true});
+const get=async name=>Buffer.from(await(await controller.request('/flash/'+encodeURIComponent(name))).arrayBuffer());
+const files=new Map();
+for(const file of listing.files.filter(f=>Number(f.size)>=0)){
+  assert.ok(!/[\\/]/.test(file.name));const data=await get(file.name);files.set(file.name,data);await writeFile(`${backup}/${file.name}`,data);
+}
+const baseline=await controller.capture();
+await writeFile(`${backup}/${BASELINE_FILE}`,JSON.stringify(baseline,null,2));
+await controller.upload(BASELINE_FILE,JSON.stringify(baseline));
+const oldHTML=gunzipSync(files.get('index.html.gz')).toString();
+const html=installDefaults(oldHTML);assert.equal(removeDefaults(html),oldHTML);
+const bytes=gzipSync(html,{level:9});
+await controller.idle();
+const body=new FormData();body.append('file',new Blob([bytes]),'/index.html.gz');
+await controller.request('/files?'+new URLSearchParams({path:'/','/index.html.gzS':String(bytes.length)}),{method:'POST',body});
+assert.ok((await get('index.html.gz')).equals(bytes),'UI readback differs');
+for(const [name,data] of files)if(name!=='index.html.gz')assert.ok((await get(name)).equals(data),`Protected file changed: ${name}`);
+await controller.idle();
+console.log({backup,baselineCreated:true,uiBytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex'),configurationChanged:false});

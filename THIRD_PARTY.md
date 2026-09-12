@@ -26,5 +26,6 @@ Our modifications (2026-09-11): presentation, Japanese labels, panel layout, jog
 | gcode-toolpath | 3.0.0 | [MIT](licenses/gcode-toolpath.txt) |
 | gcode-interpreter | See package-lock.json | [MIT](licenses/gcode-interpreter.txt) |
 | gcode-parser | 2.2.0 | [MIT](licenses/gcode-parser.txt) |
+| yaml | 2.9.1 | [ISC](licenses/yaml.txt) |
 
 Bundled preview HTML also retains these license texts. Dependencies of the unmodified WebUI are identified in the included upstream source and package-lock.json. FluidNC itself is obtained separately from [bdring/FluidNC](https://github.com/bdring/FluidNC).

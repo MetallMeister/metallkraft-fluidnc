@@ -1,14 +1,14 @@
 {
-  "version": "0.1.12",
-  "date": "2026-09-11",
+  "version": "0.2.0-beta.1",
+  "date": "2026-09-12",
   "firmware": "FluidNC v4.0.3 (not included)",
   "webuiBase": "ESP3D-WEBUI v3.0.10",
   "board": "MKS DLC32 MAX V1.0_002 / ESP32-S3",
   "configStatus": "Initial setup, uncalibrated; homing/limits/probe/spindle disabled",
   "files": {
     "ui/index.html.gz": {
-      "bytes": 116830,
-      "sha256": "5ef7ac0ec628cc1b1a4bcda60aa0e9626acd7e397d801c2203df064a58fe01b7"
+      "bytes": 153230,
+      "sha256": "ff524a7ce7564c9b2a944d162aca5ce0334318ac034a7a29ee18e8e14b3acf23"
     },
     "ui/theme-metallkraft.gz": {
       "bytes": 19830,

@@ -5,7 +5,7 @@ const files = ['index.html.gz', 'theme-metallkraft.gz', 'lang-ja.json.gz', 'pref
 await mkdir('install/ui', { recursive: true });
 const manifest = {
   version: JSON.parse(await readFile('package.json')).version,
-  date: '2026-09-11',
+  date: '2026-09-12',
   firmware: 'FluidNC v4.0.3 (not included)',
   webuiBase: 'ESP3D-WEBUI v3.0.10',
   board: 'MKS DLC32 MAX V1.0_002 / ESP32-S3',

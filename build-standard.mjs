@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { transform, build } from 'esbuild';
 import { patchStandardUI } from './standard/display-patches.mjs';
 import { icons } from 'lucide';
+import { installDefaults } from './standard/defaults-bundle.mjs';
 
 const source = 'vendor/index.html.gz';
 const expected = '46f6a276e1c4d17f17cfd6a5c48d44d5cb23ea16ce32e67194ee160951d030fa';
@@ -12,7 +13,7 @@ const original = await readFile(source);
 if (sha256(original) !== expected) throw new Error('The pinned WebUI-3 release has changed. Refusing to build.');
 await mkdir('dist-standard', { recursive: true });
 // Only the allowlisted presentation fragments differ from the pinned standard release.
-const jogUI = patchStandardUI(gunzipSync(original).toString());
+const jogUI = installDefaults(patchStandardUI(gunzipSync(original).toString()));
 await writeFile('dist-standard/index.html.gz', gzipSync(jogUI, { level: 9 }));
 await writeFile('dist-standard/index.html', jogUI);
 const theme = await readFile('standard/theme-metallkraft.css', 'utf8') + '\n' + await readFile('standard/theme-modern.css', 'utf8') + '\n' + await readFile('standard/operator-layout.css', 'utf8');
@@ -47,6 +48,9 @@ const files = ['index.html.gz', 'theme-metallkraft.gz', 'lang-ja.json.gz', 'pref
 const manifest = { standardSource: source, standardSha256: expected, firmwareChanges: false, standardExecutableModified: true, standardModification: 'Reviewed display patches and SD selection/preview/direct-start gate; native job command builder and sender retained', standardCommunicationModified: false, additionalCommunication: 'Bounded read-only SD GET on selection and before direct start; native $/report_inches and $G initialize the marker, with one Idle-only retry if the units read fails; same-origin display messages; no additional socket or controller polling', customExecutableJavaScript: true, customJavaScriptScope: ['toolpath-preview', 'read-only-announcements', 'read-only-job-progress', 'sd-file-selection-and-start-gate'], noticesSource: 'https://metallmeister.net/wp-json/wp/v2/pages/4102', files: {} };
 manifest.customJavaScriptScope.push('sd-file-deletion-selection-confirmation-and-sequencing');
 manifest.customJavaScriptScope.push('sequential-sd-downloads');
+manifest.customJavaScriptScope.push('explicit-device-local-settings-snapshot-and-restore');
+manifest.additionalCommunication = manifest.additionalCommunication.replace('no additional socket or controller polling', 'no additional background socket or controller polling');
+manifest.additionalCommunication += '; on-demand settings snapshots and guarded restoration via native file/ESP commands, using the standard UI status without opening another browser socket';
 manifest.additionalCommunication += '; user-requested sequential read-only SD downloads with per-file timeout and state checks';
 for (const file of files) { const bytes = await readFile('dist-standard/' + file); manifest.files[file] = { bytes: bytes.length, sha256: sha256(bytes) }; }
 await writeFile('dist-standard/manifest.json', JSON.stringify(manifest, null, 2) + '\n');

@@ -4,7 +4,9 @@
 
 自分の機械設定はそのままに、操作画面だけを導入できます。日本語のジョグ操作、SDファイル選択、大きな加工開始・クイック停止、加工予定経路の表示を使えます。MetallMeisterが開発・公開しています。
 
-**[最新版 v0.1.12をダウンロード（ZIP）](https://github.com/MetallMeister/metallkraft-fluidnc/releases/download/v0.1.12/metallkraft-ui-v0.1.12.zip)** · **[過去のバージョン一覧・ダウンロード](docs/VERSIONS.md)**
+**[最新ベータ版 v0.2.0-beta.1をダウンロード（ZIP）](https://github.com/MetallMeister/metallkraft-fluidnc/releases/download/v0.2.0-beta.1/metallkraft-ui-v0.2.0-beta.1.zip)** · [安定版 v0.1.12](https://github.com/MetallMeister/metallkraft-fluidnc/releases/download/v0.1.12/metallkraft-ui-v0.1.12.zip) · **[過去のバージョン一覧](docs/VERSIONS.md)**
+
+ベータ版では、設定画面から自機の正常な設定を標準として保存し、差分確認・個別復元・一括復元ができます。機械固有の標準値は同梱していません。最初に[標準設定への復元手順](docs/RESTORE.md)を確認してください。
 
 **[はじめての導入手順](docs/INSTALL.md)** · **[更新・元に戻す](docs/UPDATE.md)**
 
